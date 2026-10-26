@@ -24,8 +24,11 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME"
           java -version
 
-      - name: Set up Android SDK
+           - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME }}
+          PATH: ${{ env.JAVA_HOME }}/bin:${{ env.PATH }}
 
       - name: Install Android packages
         run: |
