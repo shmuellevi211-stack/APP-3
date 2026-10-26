@@ -1,4 +1,3 @@
-
 name: Build Android APK
 
 on:
@@ -19,24 +18,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set JAVA_HOME
-        run: |
-          echo "JAVA_HOME=$JAVA_HOME"
-          java -version
-
-           - name: Set up Android SDK
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        
 
       - name: Install Android packages
         run: |
           yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-28" "build-tools;28.0.3"
+          sdkmanager "platforms;android-33" "build-tools;33.0.2"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '7.5.1'
+          gradle-version: '7.6.4'
 
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon
