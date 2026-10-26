@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,6 +20,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Verify Java
+        run: java -version
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -31,8 +37,11 @@ jobs:
         with:
           gradle-version: '7.6.4'
 
+      - name: Verify Gradle
+        run: gradle --version
+
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
+        run: gradle assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
