@@ -132,12 +132,14 @@ public class MainActivity extends Activity {
         content.addView(sourceView, new LinearLayout.LayoutParams(-1, -2));
 
         quoteButton = button("4  •  משפט אחר מהמקורות", p[1], p[3]);
+        quoteButton.setId(View.generateViewId());
         LinearLayout.LayoutParams qp = new LinearLayout.LayoutParams(-1, -2);
         qp.setMargins(0, dp(5), 0, dp(3));
         content.addView(quoteButton, qp);
         quoteButton.setOnClickListener(v -> advanceQuote());
 
         themeButton = button("6  •  החלפת עיצוב", p[1], p[3]);
+        themeButton.setId(View.generateViewId());
         content.addView(themeButton, new LinearLayout.LayoutParams(-1, -2));
         themeButton.setOnClickListener(v -> advanceTheme());
 
@@ -185,8 +187,7 @@ public class MainActivity extends Activity {
     }
 
     private void moveButtonFocus(boolean down) {
-        View current = getCurrentFocus();
-        if (current == quoteButton) themeButton.requestFocus();
+        if (down) themeButton.requestFocus();
         else quoteButton.requestFocus();
     }
 
