@@ -1,7 +1,5 @@
 apply plugin: 'com.android.application'
 
-import java.util.Base64
-
 android {
     namespace 'org.zochrim.imitzaphim'
     compileSdkVersion 33
@@ -31,7 +29,7 @@ tasks.register('decodeLauncherIcon') {
     doLast {
         targetIcon.parentFile.mkdirs()
         String encoded = sourceIcon.getText('UTF-8').replaceAll('\\s', '')
-        targetIcon.bytes = Base64.decoder.decode(encoded)
+        targetIcon.bytes = java.util.Base64.getDecoder().decode(encoded)
     }
 }
 tasks.named('preBuild').configure {
