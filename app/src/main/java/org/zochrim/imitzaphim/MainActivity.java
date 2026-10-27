@@ -101,7 +101,7 @@ public class MainActivity extends Activity {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setGravity(Gravity.CENTER_HORIZONTAL);
 
-        content.addView(text("זוכרים ומצפים", 21, p[2], true),
+        content.addView(text("זוכרים ומצפים  •  2.0", 21, p[2], true),
             new LinearLayout.LayoutParams(-1, -2));
         content.addView(text("זיכרון ירושלים • תפילה לבניין הבית", 11, p[3], false),
             new LinearLayout.LayoutParams(-1, -2));
@@ -145,7 +145,7 @@ public class MainActivity extends Activity {
 
         quoteButton.setNextFocusDownId(themeButton.getId());
         themeButton.setNextFocusUpId(quoteButton.getId());
-        TextView foot = text("ניווט: ↑ ↓ ואישור  •  מקשים 2/8/4/6", 9, p[3], false);
+        TextView foot = text("ניווט: חצים ואישור  •  2/8 מעבר  •  4/6 פעולה  •  0 רענון", 9, p[3], false);
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2);
         fp.setMargins(0, dp(3), 0, 0);
         content.addView(foot, fp);
@@ -197,13 +197,29 @@ public class MainActivity extends Activity {
         if (keyCode == KeyEvent.KEYCODE_8) { moveButtonFocus(true); return true; }
         if (keyCode == KeyEvent.KEYCODE_4) { advanceQuote(); return true; }
         if (keyCode == KeyEvent.KEYCODE_6) { advanceTheme(); return true; }
-        if (keyCode == KeyEvent.KEYCODE_5) {
+        if (keyCode == KeyEvent.KEYCODE_5
+                || keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                || keyCode == KeyEvent.KEYCODE_ENTER
+                || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) {
             View current = getCurrentFocus();
             if (current != null && current.isClickable()) { current.performClick(); return true; }
             quoteButton.performClick();
             return true;
         }
-        // DPAD and Enter are left to Android's native focus and button handling.
+        if (keyCode == KeyEvent.KEYCODE_1 || keyCode == KeyEvent.KEYCODE_STAR) {
+            advanceQuote(); return true;
+        }
+        if (keyCode == KeyEvent.KEYCODE_3 || keyCode == KeyEvent.KEYCODE_POUND) {
+            advanceTheme(); return true;
+        }
+        if (keyCode == KeyEvent.KEYCODE_7) { quoteButton.requestFocus(); return true; }
+        if (keyCode == KeyEvent.KEYCODE_9) { themeButton.requestFocus(); return true; }
+        if (keyCode == KeyEvent.KEYCODE_0) { refreshCounter(); return true; }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) { moveButtonFocus(false); return true; }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) { moveButtonFocus(true); return true; }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            advanceQuote(); return true;
+        }
         return super.onKeyDown(keyCode, event);
     }
 }
