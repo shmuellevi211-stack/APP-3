@@ -1,11 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.zochrim.imitzaphim">
-    <application android:allowBackup="true" android:label="זוכרים ומצפים" android:theme="@android:style/Theme.Holo.NoActionBar" android:supportsRtl="true">
-        <activity android:name=".MainActivity" android:label="זוכרים ומצפים" android:screenOrientation="portrait" android:exported="true">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.zochrim.imitzaphim">
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="זוכרים ומצפים"
+        android:theme="@android:style/Theme.Holo.NoActionBar"
+        android:supportsRtl="true">
+        <activity
+            android:name=".MainActivity"
+            android:label="זוכרים ומצפים"
+            android:screenOrientation="portrait"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name=".DayCounterWidget"
+            android:label="זוכרים ומצפים — מונה ימים"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/day_counter_widget_info" />
+        </receiver>
     </application>
 </manifest>
