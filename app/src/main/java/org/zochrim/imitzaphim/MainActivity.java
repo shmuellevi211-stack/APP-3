@@ -124,7 +124,14 @@ public class MainActivity extends Activity {
     private void refreshCounter() {
         if (countView == null) return;
         Calendar now = dayStart(Calendar.getInstance()), start = startDate();
-        long days = (now.getTimeInMillis() - start.getTimeInMillis()) / 86400000L;
+        // Compare calendar dates in UTC so daylight-saving transitions cannot shift the count by one day.
+        Calendar nowUtc = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"), Locale.ROOT);
+        nowUtc.clear();
+        nowUtc.set(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH));
+        Calendar startUtc = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"), Locale.ROOT);
+        startUtc.clear();
+        startUtc.set(start.get(Calendar.YEAR), start.get(Calendar.MONTH), start.get(Calendar.DAY_OF_MONTH));
+        long days = (nowUtc.getTimeInMillis() - startUtc.getTimeInMillis()) / 86400000L;
         if (days < 0) { countView.setText("—"); dateView.setText("תאריך ההתחלה בעתיד"); }
         else {
             countView.setText(String.format(Locale.getDefault(), "%d", days));
