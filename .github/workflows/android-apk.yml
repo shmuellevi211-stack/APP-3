@@ -40,6 +40,9 @@ jobs:
       - name: Verify Gradle
         run: gradle --version
 
+      - name: Run unit tests
+        run: gradle testDebugUnitTest --stacktrace --no-daemon
+
       - name: Build debug APK
         run: gradle assembleDebug --stacktrace --no-daemon
 

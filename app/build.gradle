@@ -9,8 +9,8 @@ android {
         applicationId 'org.zochrim.imitzaphim'
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 6
-        versionName '2.4'
+        versionCode 7
+        versionName '2.4.1'
     }
 
     compileOptions {
@@ -38,4 +38,8 @@ tasks.register('decodeLauncherAssets') {
 }
 tasks.named('preBuild').configure {
     dependsOn('decodeLauncherAssets')
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
 }

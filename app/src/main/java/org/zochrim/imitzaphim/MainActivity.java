@@ -38,6 +38,10 @@ public class MainActivity extends Activity {
         {0xFF151515, 0xFF202020, 0xFFE0E0E0, 0xFFFFFFFF}
     };
 
+    private int normalizedIndex(int value, int length) {
+        return ((value % length) + length) % length;
+    }
+
     private int dp(float n) {
         return (int)(n * getResources().getDisplayMetrics().density + 0.5f);
     }
@@ -45,8 +49,8 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         prefs = getSharedPreferences("zochrim", MODE_PRIVATE);
-        theme = prefs.getInt("theme", 0) % palettes.length;
-        quoteIndex = prefs.getInt("quote", 0) % quotes.length;
+        theme = normalizedIndex(prefs.getInt("theme", 0), palettes.length);
+        quoteIndex = normalizedIndex(prefs.getInt("quote", 0), quotes.length);
         buildUi();
         refreshCounter();
     }
@@ -195,7 +199,7 @@ public class MainActivity extends Activity {
             "לפי המסורת, בית המקדש השני עמד על תילו 420 שנה. נכון לשנת 2026 חלפו בקירוב 1,956 שנים מאז החורבן.");
 
         addAboutSection(page, "אודות",
-            "בצאתי מירושלים — גרסה 2.4\n" +
+            "בצאתי מירושלים — גרסה 2.4.1\n" +
             "פותחה על ידי שמואל_770 מפורום מתמחים טופ.");
 
         ScrollView scroller = new ScrollView(this);
