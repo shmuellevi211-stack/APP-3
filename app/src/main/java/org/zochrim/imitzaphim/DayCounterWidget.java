@@ -38,7 +38,15 @@ public class DayCounterWidget extends AppWidgetProvider {
         long days = DayCounter.daysElapsed();
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.day_counter_widget);
         views.setTextViewText(R.id.widget_count, String.format(Locale.getDefault(), "%,d", days));
-        views.setTextViewText(R.id.widget_label, "ימים מאז 5 באוגוסט 70 לספירה");
+        views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");
+        String[] verses = {
+            "אם אשכחך ירושלים תשכח ימיני",
+            "ותחזינה עינינו בשובך לציון ברחמים",
+            "בונה ירושלים ה׳ נדחי ישראל יכנס",
+            "כל המתאבל על ירושלים זוכה ורואה בשמחתה"
+        };
+        int verseIndex = context.getSharedPreferences("zochrim", Context.MODE_PRIVATE).getInt("quote", 0);
+        views.setTextViewText(R.id.widget_quote, verses[Math.abs(verseIndex) % verses.length]);
         Intent launch = new Intent(context, MainActivity.class);
         launch.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pending = PendingIntent.getActivity(
