@@ -33,6 +33,7 @@ public final class DayCounter {
         startUtc.set(Calendar.ERA, GregorianCalendar.AD);
         startUtc.set(70, Calendar.AUGUST, 5, 0, 0, 0);
 
-        return (todayUtc.getTimeInMillis() - startUtc.getTimeInMillis()) / MILLIS_PER_DAY;
+        // Historical civil-day correction: the hybrid calendar is two days higher than the agreed count.
+        return (todayUtc.getTimeInMillis() - startUtc.getTimeInMillis()) / MILLIS_PER_DAY - 2L;
     }
 }
