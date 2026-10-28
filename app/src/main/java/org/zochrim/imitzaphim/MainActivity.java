@@ -1,6 +1,7 @@
 package org.zochrim.imitzaphim;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -101,7 +102,7 @@ public class MainActivity extends Activity {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setGravity(Gravity.CENTER_HORIZONTAL);
 
-        content.addView(text("זוכרים ומצפים  •  2.0", 21, p[2], true),
+        content.addView(text("בצאתי מירושלים  •  2.1", 21, p[2], true),
             new LinearLayout.LayoutParams(-1, -2));
         content.addView(text("זיכרון ירושלים • תפילה לבניין הבית", 11, p[3], false),
             new LinearLayout.LayoutParams(-1, -2));
@@ -120,10 +121,11 @@ public class MainActivity extends Activity {
         countView = text("0", 42, p[2], true);
         countView.setSingleLine(true);
         card.addView(countView, new LinearLayout.LayoutParams(-1, -2));
-        card.addView(text("ימים מאז", 13, p[3], true),
+        card.addView(text("ימים בלי בית מקדש", 13, p[3], true),
             new LinearLayout.LayoutParams(-1, -2));
-        dateView = text("5 באוגוסט 70 לספירה", 12, p[3], false);
-        card.addView(dateView, new LinearLayout.LayoutParams(-1, -2));
+        dateView = text("", 1, p[3], false); // Date is intentionally hidden.
+        dateView.setVisibility(View.GONE);
+        card.addView(dateView, new LinearLayout.LayoutParams(0, 0));
 
         quoteView = text("", 13, p[3], true);
         quoteView.setPadding(dp(3), dp(5), dp(3), dp(1));
@@ -143,6 +145,10 @@ public class MainActivity extends Activity {
         content.addView(themeButton, new LinearLayout.LayoutParams(-1, -2));
         themeButton.setOnClickListener(v -> advanceTheme());
 
+        Button guideButton = button("מדריך הפעלה ואודות", p[1], p[3]);
+        content.addView(guideButton, new LinearLayout.LayoutParams(-1, -2));
+        guideButton.setOnClickListener(v -> showGuideAndAbout());
+
         quoteButton.setNextFocusDownId(themeButton.getId());
         themeButton.setNextFocusUpId(quoteButton.getId());
         TextView foot = text("ניווט: חצים ואישור  •  2/8 מעבר  •  4/6 פעולה  •  0 רענון", 9, p[3], false);
@@ -160,11 +166,27 @@ public class MainActivity extends Activity {
         if (countView == null) return;
         long days = DayCounter.daysElapsed();
         countView.setText(String.format(Locale.getDefault(), "%,d", days));
-        dateView.setText("5 באוגוסט 70 לספירה");
+        dateView.setText("");
         updateQuote();
         DayCounterWidget.updateAll(this);
     }
 
+    private void showGuideAndAbout() {
+        String guide = "מדריך הפעלה\\n"
+            + "• המספר הראשי מציג את מניין הימים מאז התאריך הקבוע 5 באוגוסט 70 לספירה. אין צורך להגדיר תאריך.\\n"
+            + "• לחצו על ״משפט אחר מהמקורות״ כדי להחליף פסוק.\\n"
+            + "• לחצו על ״החלפת עיצוב״ כדי לעבור בין ערכות הצבעים.\\n"
+            + "• מקשי 2/8 מעבירים מיקוד, 4 מחליף פסוק, 6 מחליף עיצוב, 5/אישור מפעיל את הכפתור, ו־0 מרענן את המניין.\\n"
+            + "• ניתן להוסיף את הווידג׳ט ממסך הבית אם משגר המכשיר תומך בווידג׳טים. ניתן לשנות את גודלו בלחיצה ארוכה וגרירה, בהתאם למשגר.\\n\\n"
+            + "אודות — גרסה 2.1\\n"
+            + "האפליקציה פותחה ע״י שמואל_770 מפורום מתמחים טופ."; 
+        TextView body = text(guide, 14, palettes[theme][3], false);
+        body.setGravity(Gravity.RIGHT);
+        body.setTextIsSelectable(true);
+        ScrollView scroller = new ScrollView(this);
+        scroller.addView(body);
+        new AlertDialog.Builder(this).setTitle("מדריך הפעלה ואודות").setView(scroller).setPositiveButton("סגירה", null).show();
+    }
     private void updateQuote() {
         if (quoteView != null) {
             quoteView.setText("״" + quotes[quoteIndex] + "״");
