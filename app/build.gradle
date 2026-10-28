@@ -9,8 +9,8 @@ android {
         applicationId 'org.zochrim.imitzaphim'
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 5
-        versionName '2.3'
+        versionCode 6
+        versionName '2.4'
     }
 
     compileOptions {
@@ -19,19 +19,23 @@ android {
     }
 }
 
-// Keep the source icon as text in Git so it can be maintained via GitHub's text-file API.
-// The build task materializes the real PNG resource before Android resource processing.
-tasks.register('decodeLauncherIcon') {
+// Materialize source artwork from text files before Android resource processing.
+tasks.register('decodeLauncherAssets') {
     def sourceIcon = file('icon-src/ic_launcher.png.b64')
     def targetIcon = file('src/main/res/drawable-nodpi/ic_launcher.png')
-    inputs.file(sourceIcon)
-    outputs.file(targetIcon)
+    def sourceWidgetScene = file('icon-src/widget_temple_scene.jpg.b64')
+    def targetWidgetScene = file('src/main/res/drawable-nodpi/widget_temple_scene.jpg')
+    inputs.files(sourceIcon, sourceWidgetScene)
+    outputs.files(targetIcon, targetWidgetScene)
     doLast {
         targetIcon.parentFile.mkdirs()
-        String encoded = sourceIcon.getText('UTF-8').replaceAll('\\s', '')
-        targetIcon.bytes = java.util.Base64.getDecoder().decode(encoded)
+        targetWidgetScene.parentFile.mkdirs()
+        String encodedIcon = sourceIcon.getText('UTF-8').replaceAll('\\s', '')
+        String encodedScene = sourceWidgetScene.getText('UTF-8').replaceAll('\\s', '')
+        targetIcon.bytes = java.util.Base64.getDecoder().decode(encodedIcon)
+        targetWidgetScene.bytes = java.util.Base64.getDecoder().decode(encodedScene)
     }
 }
 tasks.named('preBuild').configure {
-    dependsOn('decodeLauncherIcon')
+    dependsOn('decodeLauncherAssets')
 }

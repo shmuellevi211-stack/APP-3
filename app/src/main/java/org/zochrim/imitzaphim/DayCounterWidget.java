@@ -10,7 +10,7 @@ import android.os.Bundle;
 import android.widget.RemoteViews;
 import java.util.Locale;
 
-/** Home-screen counter widget; resize-aware and shared by all preset-size providers. */
+/** Live day counter widget in the selected Temple photo + ivory/gold card design. */
 public class DayCounterWidget extends AppWidgetProvider {
     private static final String[] VERSES = {
         "אִם אֶשְׁכָּחֵךְ יְרוּשָׁלָ‍ִם תִּשְׁכַּח יְמִינִי",
@@ -55,15 +55,10 @@ public class DayCounterWidget extends AppWidgetProvider {
     }
 
     protected int chooseLayout(int widthDp, int heightDp) {
-        if (widthDp > 0 && widthDp < 90) {
-            return R.layout.day_counter_widget_narrow;
-        }
-        if (widthDp > 0 && widthDp < 150 && heightDp > 0 && heightDp < 150) {
-            return R.layout.day_counter_widget_square;
-        }
-        if (heightDp > 0 && heightDp < 150) {
-            return R.layout.day_counter_widget_compact;
-        }
+        if (widthDp > 0 && widthDp < 90) return R.layout.day_counter_widget_narrow;
+        if (widthDp > 0 && widthDp < 150) return R.layout.day_counter_widget_square;
+        if (widthDp > 0 && widthDp < 230 && heightDp > 150) return R.layout.day_counter_widget_square;
+        if (heightDp > 0 && heightDp < 150) return R.layout.day_counter_widget_compact;
         return R.layout.day_counter_widget_large;
     }
 
@@ -92,7 +87,7 @@ public class DayCounterWidget extends AppWidgetProvider {
                 String.format(Locale.getDefault(), "%,d", days));
             views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");
             views.setTextViewText(R.id.widget_quote, verse);
-            views.setImageViewResource(R.id.widget_temple_image, R.drawable.ic_launcher);
+            views.setImageViewResource(R.id.widget_temple_image, R.drawable.widget_temple_scene);
             views.setOnClickPendingIntent(R.id.widget_root, pending);
             manager.updateAppWidget(id, views);
         }
