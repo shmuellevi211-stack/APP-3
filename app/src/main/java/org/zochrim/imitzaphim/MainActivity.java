@@ -198,6 +198,7 @@ public class MainActivity extends Activity {
         quoteIndex = (quoteIndex + 1) % quotes.length;
         prefs.edit().putInt("quote", quoteIndex).apply();
         updateQuote();
+        DayCounterWidget.updateAll(this);
     }
 
     private void advanceTheme() {
