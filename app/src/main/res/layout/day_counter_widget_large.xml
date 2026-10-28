@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="6dp"
+    android:background="@drawable/widget_background">
+    <ImageView
+        android:id="@+id/widget_temple_image"
+        android:layout_width="76dp"
+        android:layout_height="90dp"
+        android:contentDescription="בית המקדש"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_launcher" />
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingStart="6dp"
+        android:paddingEnd="2dp">
+        <TextView
+            android:id="@+id/widget_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="714,498"
+            android:textColor="#FFFFC94D"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:singleLine="true"
+            android:ellipsize="end" />
+        <TextView
+            android:id="@+id/widget_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ימים בלי בית מקדש"
+            android:textColor="#FFFFF4D8"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:singleLine="true"
+            android:ellipsize="end" />
+        <TextView
+            android:id="@+id/widget_quote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="אם אשכחך ירושלים תשכח ימיני"
+            android:textColor="#FFFFF4D8"
+            android:textSize="11sp"
+            android:gravity="center"
+            android:maxLines="3"
+            android:ellipsize="end" />
+    </LinearLayout>
+</LinearLayout>
