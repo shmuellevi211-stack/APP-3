@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setGravity(Gravity.CENTER_HORIZONTAL);
 
-        content.addView(text("בצאתי מירושלים  •  2.2", 21, p[2], true),
+        content.addView(text("בצאתי מירושלים", 21, p[2], true),
             new LinearLayout.LayoutParams(-1, -2));
         content.addView(text("זיכרון ירושלים • תפילה לבניין הבית", 11, p[3], false),
             new LinearLayout.LayoutParams(-1, -2));
@@ -172,26 +172,66 @@ public class MainActivity extends Activity {
     }
 
     private void showGuideAndAbout() {
-        String guide = "מדריך הפעלה\\n"
-            + "• המספר הראשי מציג את מניין הימים מאז התאריך הקבוע 5 באוגוסט 70 לספירה. אין צורך להגדיר תאריך.\\n"
-            + "• לחצו על ״משפט אחר מהמקורות״ כדי להחליף פסוק.\\n"
-            + "• לחצו על ״החלפת עיצוב״ כדי לעבור בין ערכות הצבעים.\\n"
-            + "• מקשי 2/8 מעבירים מיקוד, 4 מחליף פסוק, 6 מחליף עיצוב, 5/אישור מפעיל את הכפתור, ו־0 מרענן את המניין.\\n"
-            + "• ניתן להוסיף את הווידג׳ט ממסך הבית אם משגר המכשיר תומך בווידג׳טים. ניתן לשנות את גודלו בלחיצה ארוכה וגרירה, בהתאם למשגר. הגודל עשוי להשתנות בין 1×3, 4×1 ו־4×3 בהתאם לתמיכת משגר המכשיר.\\n\\n"
-            + "אודות — גרסה 2.2\\n"
-            + "חורבן בית המקדש השני מצוין במסורת בט׳ באב בשנת ג׳תת״ל (3830 לבריאת העולם), בשנת 70 לספירה.\\n"
-            + "לפי המרה חשבונית לאחור של לוח השנה, ט׳ באב באותה שנה חל בקירוב ב־2 באוגוסט 70; תאריכים אזרחיים לתקופה זו אינם ודאיים.\\n"
-            + "לצורך מניין הימים, האפליקציה משתמשת בתאריך הייחוס 5 באוגוסט 70 לספירה.\\n"
-            + "לפי המסורת, בית המקדש השני עמד על תילו 420 שנה.\\n"
-            + "נכון לשנת 2026, חלפו בקירוב 1,956 שנים מאז שנת החורבן; מניין הימים באפליקציה מחושב לפי התאריך הקבוע שהוגדר בה.\\n\\n"
-            + "האפליקציה פותחה ע״י שמואל_770 מפורום מתמחים טופ."; 
-        TextView body = text(guide, 14, palettes[theme][3], false);
-        body.setGravity(Gravity.RIGHT);
-        body.setTextIsSelectable(true);
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setPadding(dp(8), dp(6), dp(8), dp(6));
+        page.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+        addAboutSection(page, "מדריך הפעלה",
+            "• המספר הראשי מציג את מניין הימים מתאריך הייחוס 5 באוגוסט 70 לספירה.\n" +
+            "• ״משפט אחר מהמקורות״ מחליף את הפסוק המוצג.\n" +
+            "• ״החלפת עיצוב״ מחליפה בין ערכות הצבעים.\n" +
+            "• מקשי 2/8 מעבירים מיקוד, 4 מחליף פסוק, 6 מחליף עיצוב, 5/אישור מפעיל כפתור ו־0 מרענן את המניין.\n" +
+            "• להוספת ווידג׳ט: לחיצה ארוכה במסך הבית, פתיחת ווידג׳טים ובחירת הגודל הרצוי.");
+
+        addAboutSection(page, "גדלי ווידג׳ט",
+            "אפשר לבחור פריסה מראש: 1×3, 1×4, 2×2, 3×2, 3×3, 4×1, 4×2, 4×3 או 5×1. " +
+            "אפשרויות השינוי בפועל תלויות במשגר מסך הבית של המכשיר.");
+
+        addAboutSection(page, "חורבן בית המקדש השני",
+            "לפי המסורת, בית המקדש השני חרב בט׳ באב בשנת ג׳תת״ל (3830 לבריאת העולם), בשנת 70 לספירה.\n" +
+            "בהמרה חשבונית לאחור, התאריך הלועזי המקביל מוערך בקירוב כ־2 באוגוסט 70, אך תאריכים אזרחיים מתקופה זו אינם ודאיים.\n" +
+            "לצורך מניין הימים, האפליקציה משתמשת בתאריך ייחוס קבוע: 5 באוגוסט 70 לספירה.\n" +
+            "לפי המסורת, בית המקדש השני עמד על תילו 420 שנה. נכון לשנת 2026 חלפו בקירוב 1,956 שנים מאז החורבן.");
+
+        addAboutSection(page, "אודות",
+            "בצאתי מירושלים — גרסה 2.3\n" +
+            "פותחה על ידי שמואל_770 מפורום מתמחים טופ.");
+
         ScrollView scroller = new ScrollView(this);
-        scroller.addView(body);
-        new AlertDialog.Builder(this).setTitle("מדריך הפעלה ואודות").setView(scroller).setPositiveButton("סגירה", null).show();
+        scroller.setFillViewport(true);
+        scroller.addView(page);
+        new AlertDialog.Builder(this)
+            .setTitle("מדריך הפעלה ואודות")
+            .setView(scroller)
+            .setPositiveButton("סגירה", null)
+            .show();
     }
+
+    private void addAboutSection(LinearLayout parent, String heading, String details) {
+        int[] p = palettes[theme];
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(10), dp(8), dp(10), dp(8));
+        card.setBackground(shape(p[1], 10, p[2]));
+
+        TextView titleView = text(heading, 16, p[2], true);
+        titleView.setGravity(Gravity.RIGHT);
+        titleView.setTextDirection(View.TEXT_DIRECTION_RTL);
+        card.addView(titleView, new LinearLayout.LayoutParams(-1, -2));
+
+        TextView detailView = text(details, 14, p[3], false);
+        detailView.setGravity(Gravity.RIGHT);
+        detailView.setTextDirection(View.TEXT_DIRECTION_RTL);
+        detailView.setLineSpacing(dp(4), 1.0f);
+        detailView.setTextIsSelectable(true);
+        card.addView(detailView, new LinearLayout.LayoutParams(-1, -2));
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+        params.setMargins(0, dp(4), 0, dp(4));
+        parent.addView(card, params);
+    }
+
     private void updateQuote() {
         if (quoteView != null) {
             quoteView.setText("״" + quotes[quoteIndex] + "״");
