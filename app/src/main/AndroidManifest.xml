@@ -21,7 +21,7 @@
         </activity>
         <receiver
             android:name=".DayCounterWidget"
-            android:label="בצאתי מירושלים — מתכוונן"
+            android:label="בצאתי מירושלים — ווידג׳ט"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -29,109 +29,11 @@
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/day_counter_widget_info" />
-        </receiver>
-        <receiver
-            android:name=".Widget1x3Provider"
-            android:label="בצאתי מירושלים — 1×3"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_1x3" />
-        </receiver>
-        <receiver
-            android:name=".Widget1x4Provider"
-            android:label="בצאתי מירושלים — 1×4"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_1x4" />
-        </receiver>
-        <receiver
-            android:name=".Widget2x2Provider"
-            android:label="בצאתי מירושלים — 2×2"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_2x2" />
-        </receiver>
-        <receiver
-            android:name=".Widget3x2Provider"
-            android:label="בצאתי מירושלים — 3×2"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_3x2" />
-        </receiver>
-        <receiver
-            android:name=".Widget3x3Provider"
-            android:label="בצאתי מירושלים — 3×3"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_3x3" />
-        </receiver>
-        <receiver
-            android:name=".Widget4x1Provider"
-            android:label="בצאתי מירושלים — 4×1"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_4x1" />
-        </receiver>
-        <receiver
-            android:name=".Widget4x2Provider"
-            android:label="בצאתי מירושלים — 4×2"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_4x2" />
-        </receiver>
-        <receiver
-            android:name=".Widget4x3Provider"
-            android:label="בצאתי מירושלים — 4×3"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_4x3" />
-        </receiver>
-        <receiver
-            android:name=".Widget5x1Provider"
-            android:label="בצאתי מירושלים — 5×1"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_5x1" />
         </receiver>
     </application>
 </manifest>

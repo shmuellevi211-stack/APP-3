@@ -10,9 +10,9 @@ import android.os.Bundle;
 import android.widget.RemoteViews;
 import java.util.Locale;
 
-/** API 19-compatible home-screen widget. Every RemoteViews target exists in every layout. */
+/** One resizable AppWidgetProvider; mirrors the original working single-provider structure. */
 public class DayCounterWidget extends AppWidgetProvider {
-    private static final int[][] WIDGET_PALETTES = {
+    private static final int[][] PALETTES = {
         {0xFF101B30, 0xFF1B2B49, 0xFFFFC94D, 0xFFFFF4D8},
         {0xFF102820, 0xFF1B4034, 0xFFD8B968, 0xFFF4F0E4},
         {0xFFEAF4F8, 0xFFFFFFFF, 0xFF317A91, 0xFF172D38},
@@ -26,58 +26,55 @@ public class DayCounterWidget extends AppWidgetProvider {
         "כָּל הַמִּתְאַבֵּל עַל יְרוּשָׁלַיִם זוֹכֶה וְרוֹאֶה בְּשִׂמְחָתָהּ"
     };
 
-    @Override public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
-        updateIds(context, manager, appWidgetIds);
+    @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
+        updateIds(context, manager, ids);
     }
 
     @Override public void onAppWidgetOptionsChanged(Context context, AppWidgetManager manager,
-                                                    int appWidgetId, Bundle newOptions) {
+                                                    int appWidgetId, Bundle options) {
         updateIds(context, manager, new int[]{appWidgetId});
     }
 
     @Override public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        String action = intent == null ? null : intent.getAction();
+        if (intent == null) return;
+        String action = intent.getAction();
         if (Intent.ACTION_DATE_CHANGED.equals(action)
                 || Intent.ACTION_TIME_CHANGED.equals(action)
                 || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
-                || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+                || Intent.ACTION_BOOT_COMPLETED.equals(action)
+                || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
             updateAll(context);
         }
     }
 
+    /** There is deliberately one registered widget provider, as in the older working releases. */
     public static void updateAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        DayCounterWidget[] providers = new DayCounterWidget[] {
-            new DayCounterWidget(), new Widget1x3Provider(), new Widget1x4Provider(),
-            new Widget2x2Provider(), new Widget3x2Provider(), new Widget3x3Provider(),
-            new Widget4x1Provider(), new Widget4x2Provider(), new Widget4x3Provider(),
-            new Widget5x1Provider()
-        };
-        for (DayCounterWidget provider : providers) {
-            int[] ids = manager.getAppWidgetIds(new ComponentName(context, provider.getClass()));
-            provider.updateIds(context, manager, ids);
-        }
+        int[] ids = manager.getAppWidgetIds(
+            new ComponentName(context, DayCounterWidget.class));
+        updateIds(context, manager, ids);
     }
 
-    protected int chooseLayout(int widthDp, int heightDp) {
+    private static int chooseLayout(int widthDp, int heightDp) {
         if (widthDp > 0 && widthDp < 90) return R.layout.day_counter_widget_narrow;
+        if (heightDp > 0 && heightDp < 70) return R.layout.day_counter_widget_compact;
         if (widthDp > 0 && widthDp < 150) return R.layout.day_counter_widget_square;
         if (heightDp > 0 && heightDp < 150) return R.layout.day_counter_widget_compact;
         return R.layout.day_counter_widget_large;
     }
 
-    private void updateIds(Context context, AppWidgetManager manager, int[] ids) {
+    private static void updateIds(Context context, AppWidgetManager manager, int[] ids) {
         if (ids == null || ids.length == 0) return;
 
         long days = DayCounter.daysElapsed();
-        android.content.SharedPreferences preferences =
+        android.content.SharedPreferences prefs =
             context.getSharedPreferences("zochrim", Context.MODE_PRIVATE);
-        int quoteIndex = preferences.getInt("quote", 0);
+        int quoteIndex = prefs.getInt("quote", 0);
         quoteIndex = ((quoteIndex % VERSES.length) + VERSES.length) % VERSES.length;
-        int theme = preferences.getInt("theme", 0);
-        theme = ((theme % WIDGET_PALETTES.length) + WIDGET_PALETTES.length) % WIDGET_PALETTES.length;
-        int[] palette = WIDGET_PALETTES[theme];
+        int theme = prefs.getInt("theme", 0);
+        theme = ((theme % PALETTES.length) + PALETTES.length) % PALETTES.length;
+        int[] palette = PALETTES[theme];
 
         Intent launch = new Intent(context, MainActivity.class);
         launch.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -94,14 +91,10 @@ public class DayCounterWidget extends AppWidgetProvider {
             RemoteViews views = new RemoteViews(context.getPackageName(),
                 chooseLayout(widthDp, heightDp));
 
-            // setBackgroundColor is a RemoteViews-supported View method on Android 4.4.
-            // setBackgroundResource is not reliably remotable on older launchers.
-            views.setInt(R.id.widget_root, "setBackgroundColor", palette[1]);
+            // Only standard RemoteViews methods are used; theme colors are applied to TextViews.
             views.setTextColor(R.id.widget_count, palette[2]);
             views.setTextColor(R.id.widget_label, palette[3]);
             views.setTextColor(R.id.widget_quote, palette[3]);
-            views.setInt(R.id.widget_divider, "setBackgroundColor", palette[2]);
-
             views.setTextViewText(R.id.widget_count,
                 String.format(Locale.getDefault(), "%,d", days));
             views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");

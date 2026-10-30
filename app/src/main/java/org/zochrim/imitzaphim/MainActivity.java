@@ -209,7 +209,7 @@ public class MainActivity extends Activity {
             "לפי המסורת, בית המקדש השני עמד על תילו 420 שנה. נכון לשנת 2026 חלפו בקירוב 1,956 שנים מאז החורבן.");
 
         addAboutSection(page, "אודות",
-            "בצאתי מירושלים — גרסה 2.4.3\n" +
+            "בצאתי מירושלים — גרסה 2.4.4\n" +
             "פותחה על ידי שמואל_770 מפורום מתמחים טופ.");
 
         ScrollView scroller = new ScrollView(this);
