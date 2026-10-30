@@ -5,7 +5,7 @@
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/day_counter_widget_square"
     android:minResizeWidth="72dp"
-    android:minResizeHeight="126dp"
+    android:minResizeHeight="72dp"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/widget_description" />

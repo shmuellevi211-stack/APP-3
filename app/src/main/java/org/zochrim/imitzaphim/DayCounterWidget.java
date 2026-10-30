@@ -10,8 +10,13 @@ import android.os.Bundle;
 import android.widget.RemoteViews;
 import java.util.Locale;
 
-/** Live day counter widget in the selected Temple photo + ivory/gold card design. */
 public class DayCounterWidget extends AppWidgetProvider {
+    private static final int[][] WIDGET_PALETTES = {
+        {0xFF101B30, 0xFF1B2B49, 0xFFFFC94D, 0xFFFFF4D8},
+        {0xFF102820, 0xFF1B4034, 0xFFD8B968, 0xFFF4F0E4},
+        {0xFFEAF4F8, 0xFFFFFFFF, 0xFF317A91, 0xFF172D38},
+        {0xFF151515, 0xFF202020, 0xFFE0E0E0, 0xFFFFFFFF}
+    };
     private static final String[] VERSES = {
         "אִם אֶשְׁכָּחֵךְ יְרוּשָׁלָ‍ִם תִּשְׁכַּח יְמִינִי",
         "וְתֶחֱזֶינָה עֵינֵינוּ בְּשׁוּבְךָ לְצִיּוֹן בְּרַחֲמִים",
@@ -42,8 +47,7 @@ public class DayCounterWidget extends AppWidgetProvider {
     public static void updateAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
         DayCounterWidget[] providers = new DayCounterWidget[] {
-            new DayCounterWidget(),
-            new Widget1x3Provider(), new Widget1x4Provider(),
+            new DayCounterWidget(), new Widget1x3Provider(), new Widget1x4Provider(),
             new Widget2x2Provider(), new Widget3x2Provider(), new Widget3x3Provider(),
             new Widget4x1Provider(), new Widget4x2Provider(), new Widget4x3Provider(),
             new Widget5x1Provider()
@@ -61,13 +65,25 @@ public class DayCounterWidget extends AppWidgetProvider {
         return R.layout.day_counter_widget_large;
     }
 
+    private int backgroundForTheme(int theme) {
+        switch (theme) {
+            case 1: return R.drawable.widget_background_green;
+            case 2: return R.drawable.widget_background_light;
+            case 3: return R.drawable.widget_background_dark;
+            default: return R.drawable.widget_background;
+        }
+    }
+
     private void updateIds(Context context, AppWidgetManager manager, int[] ids) {
         if (ids == null || ids.length == 0) return;
         long days = DayCounter.daysElapsed();
-        int quoteIndex = context.getSharedPreferences("zochrim", Context.MODE_PRIVATE)
-            .getInt("quote", 0);
+        android.content.SharedPreferences preferences =
+            context.getSharedPreferences("zochrim", Context.MODE_PRIVATE);
+        int quoteIndex = preferences.getInt("quote", 0);
         quoteIndex = ((quoteIndex % VERSES.length) + VERSES.length) % VERSES.length;
-        String verse = VERSES[quoteIndex];
+        int theme = preferences.getInt("theme", 0);
+        theme = ((theme % WIDGET_PALETTES.length) + WIDGET_PALETTES.length) % WIDGET_PALETTES.length;
+        int[] palette = WIDGET_PALETTES[theme];
 
         Intent launch = new Intent(context, MainActivity.class);
         launch.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -82,10 +98,15 @@ public class DayCounterWidget extends AppWidgetProvider {
                 options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
             RemoteViews views = new RemoteViews(context.getPackageName(),
                 chooseLayout(widthDp, heightDp));
+            views.setInt(R.id.widget_root, "setBackgroundResource", backgroundForTheme(theme));
+            views.setTextColor(R.id.widget_count, palette[2]);
+            views.setTextColor(R.id.widget_label, palette[3]);
+            views.setTextColor(R.id.widget_quote, palette[3]);
+            views.setInt(R.id.widget_divider, "setBackgroundColor", palette[2]);
             views.setTextViewText(R.id.widget_count,
                 String.format(Locale.getDefault(), "%,d", days));
             views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");
-            views.setTextViewText(R.id.widget_quote, verse);
+            views.setTextViewText(R.id.widget_quote, VERSES[quoteIndex]);
             views.setImageViewResource(R.id.widget_temple_image, R.drawable.widget_temple_scene);
             views.setOnClickPendingIntent(R.id.widget_root, pending);
             manager.updateAppWidget(id, views);

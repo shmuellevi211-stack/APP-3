@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -19,7 +20,7 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private SharedPreferences prefs;
     private TextView countView, dateView, quoteView, sourceView;
-    private Button quoteButton, themeButton;
+    private Button quoteButton, themeButton, guideButton;
     private int theme = 0, quoteIndex = 0;
 
     private final String[] quotes = {
@@ -149,12 +150,15 @@ public class MainActivity extends Activity {
         content.addView(themeButton, new LinearLayout.LayoutParams(-1, -2));
         themeButton.setOnClickListener(v -> advanceTheme());
 
-        Button guideButton = button("מדריך הפעלה ואודות", p[1], p[3]);
+        guideButton = button("מדריך הפעלה", p[1], p[3]);
         content.addView(guideButton, new LinearLayout.LayoutParams(-1, -2));
         guideButton.setOnClickListener(v -> showGuideAndAbout());
 
+        guideButton.setId(View.generateViewId());
         quoteButton.setNextFocusDownId(themeButton.getId());
         themeButton.setNextFocusUpId(quoteButton.getId());
+        themeButton.setNextFocusDownId(guideButton.getId());
+        guideButton.setNextFocusUpId(themeButton.getId());
         TextView foot = text("ניווט: חצים ואישור  •  2/8 מעבר  •  4/6 פעולה  •  0 רענון", 9, p[3], false);
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2);
         fp.setMargins(0, dp(3), 0, 0);
@@ -164,6 +168,7 @@ public class MainActivity extends Activity {
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(root);
         updateQuote();
+        quoteButton.requestFocus();
     }
 
     private void refreshCounter() {
@@ -199,17 +204,41 @@ public class MainActivity extends Activity {
             "לפי המסורת, בית המקדש השני עמד על תילו 420 שנה. נכון לשנת 2026 חלפו בקירוב 1,956 שנים מאז החורבן.");
 
         addAboutSection(page, "אודות",
-            "בצאתי מירושלים — גרסה 2.4.1\n" +
+            "בצאתי מירושלים — גרסה 2.4.2\n" +
             "פותחה על ידי שמואל_770 מפורום מתמחים טופ.");
 
         ScrollView scroller = new ScrollView(this);
         scroller.setFillViewport(true);
+        scroller.setFocusable(true);
+        scroller.setFocusableInTouchMode(true);
+        scroller.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+        scroller.setVerticalScrollBarEnabled(true);
         scroller.addView(page);
-        new AlertDialog.Builder(this)
-            .setTitle("מדריך הפעלה ואודות")
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle("מדריך הפעלה")
             .setView(scroller)
             .setPositiveButton("סגירה", null)
-            .show();
+            .create();
+        dialog.setOnShowListener(ignored -> {
+            scroller.requestFocus();
+            dialog.setOnKeyListener((shownDialog, keyCode, event) -> {
+                if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+                int amount = Math.max(dp(48), scroller.getHeight() / 2);
+                if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_8
+                        || keyCode == KeyEvent.KEYCODE_PAGE_DOWN || keyCode == KeyEvent.KEYCODE_9) {
+                    scroller.smoothScrollBy(0, amount);
+                    return true;
+                }
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_2
+                        || keyCode == KeyEvent.KEYCODE_PAGE_UP || keyCode == KeyEvent.KEYCODE_7) {
+                    scroller.smoothScrollBy(0, -amount);
+                    return true;
+                }
+                return false;
+            });
+        });
+        dialog.show();
     }
 
     private void addAboutSection(LinearLayout parent, String heading, String details) {
@@ -255,12 +284,18 @@ public class MainActivity extends Activity {
         prefs.edit().putInt("theme", theme).apply();
         buildUi();
         refreshCounter();
-        if (quoteButton != null) quoteButton.requestFocus();
+        if (themeButton != null) themeButton.requestFocus();
     }
 
     private void moveButtonFocus(boolean down) {
-        if (down) themeButton.requestFocus();
-        else quoteButton.requestFocus();
+        View current = getCurrentFocus();
+        if (current == quoteButton) {
+            if (down) themeButton.requestFocus(); else guideButton.requestFocus();
+        } else if (current == themeButton) {
+            if (down) guideButton.requestFocus(); else quoteButton.requestFocus();
+        } else {
+            if (down) quoteButton.requestFocus(); else themeButton.requestFocus();
+        }
     }
 
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -290,7 +325,7 @@ public class MainActivity extends Activity {
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) { moveButtonFocus(false); return true; }
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) { moveButtonFocus(true); return true; }
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            advanceQuote(); return true;
+            moveButtonFocus(keyCode == KeyEvent.KEYCODE_DPAD_LEFT); return true;
         }
         return super.onKeyDown(keyCode, event);
     }
