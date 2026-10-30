@@ -9,8 +9,8 @@ android {
         applicationId 'org.zochrim.imitzaphim'
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 8
-        versionName '2.4.2'
+        versionCode 9
+        versionName '2.4.3'
     }
 
     compileOptions {

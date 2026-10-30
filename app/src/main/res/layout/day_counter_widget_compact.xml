@@ -19,7 +19,7 @@
             android:layout_height="match_parent"
             android:layout_marginEnd="5dp"
             android:contentDescription="בית המקדש"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             android:src="@drawable/widget_temple_scene" />
         <LinearLayout
             android:layout_width="0dp"

@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.widget.RemoteViews;
 import java.util.Locale;
 
+/** API 19-compatible home-screen widget. Every RemoteViews target exists in every layout. */
 public class DayCounterWidget extends AppWidgetProvider {
     private static final int[][] WIDGET_PALETTES = {
         {0xFF101B30, 0xFF1B2B49, 0xFFFFC94D, 0xFFFFF4D8},
@@ -17,6 +18,7 @@ public class DayCounterWidget extends AppWidgetProvider {
         {0xFFEAF4F8, 0xFFFFFFFF, 0xFF317A91, 0xFF172D38},
         {0xFF151515, 0xFF202020, 0xFFE0E0E0, 0xFFFFFFFF}
     };
+
     private static final String[] VERSES = {
         "אִם אֶשְׁכָּחֵךְ יְרוּשָׁלָ‍ִם תִּשְׁכַּח יְמִינִי",
         "וְתֶחֱזֶינָה עֵינֵינוּ בְּשׁוּבְךָ לְצִיּוֹן בְּרַחֲמִים",
@@ -65,17 +67,9 @@ public class DayCounterWidget extends AppWidgetProvider {
         return R.layout.day_counter_widget_large;
     }
 
-    private int backgroundForTheme(int theme) {
-        switch (theme) {
-            case 1: return R.drawable.widget_background_green;
-            case 2: return R.drawable.widget_background_light;
-            case 3: return R.drawable.widget_background_dark;
-            default: return R.drawable.widget_background;
-        }
-    }
-
     private void updateIds(Context context, AppWidgetManager manager, int[] ids) {
         if (ids == null || ids.length == 0) return;
+
         long days = DayCounter.daysElapsed();
         android.content.SharedPreferences preferences =
             context.getSharedPreferences("zochrim", Context.MODE_PRIVATE);
@@ -96,13 +90,18 @@ public class DayCounterWidget extends AppWidgetProvider {
                 options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
             int heightDp = options == null ? 0 :
                 options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
+
             RemoteViews views = new RemoteViews(context.getPackageName(),
                 chooseLayout(widthDp, heightDp));
-            views.setInt(R.id.widget_root, "setBackgroundResource", backgroundForTheme(theme));
+
+            // setBackgroundColor is a RemoteViews-supported View method on Android 4.4.
+            // setBackgroundResource is not reliably remotable on older launchers.
+            views.setInt(R.id.widget_root, "setBackgroundColor", palette[1]);
             views.setTextColor(R.id.widget_count, palette[2]);
             views.setTextColor(R.id.widget_label, palette[3]);
             views.setTextColor(R.id.widget_quote, palette[3]);
             views.setInt(R.id.widget_divider, "setBackgroundColor", palette[2]);
+
             views.setTextViewText(R.id.widget_count,
                 String.format(Locale.getDefault(), "%,d", days));
             views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");

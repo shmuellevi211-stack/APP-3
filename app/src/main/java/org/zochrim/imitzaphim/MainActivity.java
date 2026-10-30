@@ -1,6 +1,8 @@
 package org.zochrim.imitzaphim;
 
 import android.app.Activity;
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProviderInfo;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -193,6 +195,9 @@ public class MainActivity extends Activity {
             "• מקשי 2/8 מעבירים מיקוד, 4 מחליף פסוק, 6 מחליף עיצוב, 5/אישור מפעיל כפתור ו־0 מרענן את המניין.\n" +
             "• להוספת ווידג׳ט: לחיצה ארוכה במסך הבית, פתיחת ווידג׳טים ובחירת הגודל הרצוי.");
 
+        addAboutSection(page, "בדיקת תמיכה בווידג׳טים",
+            widgetSupportDetails());
+
         addAboutSection(page, "גדלי ווידג׳ט",
             "אפשר לבחור פריסה מראש: 1×3, 1×4, 2×2, 3×2, 3×3, 4×1, 4×2, 4×3 או 5×1. " +
             "אפשרויות השינוי בפועל תלויות במשגר מסך הבית של המכשיר.");
@@ -204,7 +209,7 @@ public class MainActivity extends Activity {
             "לפי המסורת, בית המקדש השני עמד על תילו 420 שנה. נכון לשנת 2026 חלפו בקירוב 1,956 שנים מאז החורבן.");
 
         addAboutSection(page, "אודות",
-            "בצאתי מירושלים — גרסה 2.4.2\n" +
+            "בצאתי מירושלים — גרסה 2.4.3\n" +
             "פותחה על ידי שמואל_770 מפורום מתמחים טופ.");
 
         ScrollView scroller = new ScrollView(this);
@@ -239,6 +244,32 @@ public class MainActivity extends Activity {
             });
         });
         dialog.show();
+    }
+
+    private String widgetSupportDetails() {
+        boolean systemSupportsWidgets =
+            getPackageManager().hasSystemFeature("android.software.app_widgets");
+        int appProviders = 0;
+        try {
+            for (AppWidgetProviderInfo info :
+                    AppWidgetManager.getInstance(this).getInstalledProviders()) {
+                if (info.provider != null
+                        && getPackageName().equals(info.provider.getPackageName())) {
+                    appProviders++;
+                }
+            }
+        } catch (RuntimeException ignored) {
+            return "לא ניתן לקבל מידע על משגר מסך הבית. אם מתקבלת הודעה שאי אפשר להוסיף ווידג׳ט, ייתכן שמשגר המכשיר אינו תומך באירוח ווידג׳טים.";
+        }
+
+        if (!systemSupportsWidgets) {
+            return "מערכת המכשיר אינה מצהירה על תמיכה בווידג׳טים במסך הבית. האפליקציה רשמה "
+                + appProviders + " תצוגות ווידג׳ט, אך המשגר עצמו עשוי שלא לאפשר להוסיף אותן. "
+                + "במקרה כזה נדרש משגר שתומך בווידג׳טים.";
+        }
+        return "מערכת Android מדווחת על תמיכה בווידג׳טים, ונמצאו "
+            + appProviders + " תצוגות של האפליקציה. אם עדיין מתקבלת הודעת שגיאה, "
+            + "ייתכן שמשגר מסך הבית או המקום הפנוי במסך מגבילים את ההוספה.";
     }
 
     private void addAboutSection(LinearLayout parent, String heading, String details) {
