@@ -21,15 +21,22 @@ android {
 
 // Materialize source artwork from text files before Android resource processing.
 tasks.register('decodeLauncherAssets') {
-    def sourceTemple = file('icon-src/temple_cutout.png.b64')
+    // Split Base64 source into small UTF-8 text parts to avoid file truncation.
+    def sourceTempleParts = [
+        file('icon-src/temple_cutout.part1.b64'),
+        file('icon-src/temple_cutout.part2.b64'),
+        file('icon-src/temple_cutout.part3.b64')
+    ]
     def targetIcon = file('src/main/res/drawable-nodpi/ic_launcher.png')
     def targetWidgetScene = file('src/main/res/drawable-nodpi/widget_temple_scene.png')
-    inputs.file(sourceTemple)
+    inputs.files(sourceTempleParts)
     outputs.files(targetIcon, targetWidgetScene)
     doLast {
         targetIcon.parentFile.mkdirs()
         targetWidgetScene.parentFile.mkdirs()
-        String encodedTemple = sourceTemple.getText('UTF-8').replaceAll('\\s', '')
+        String encodedTemple = sourceTempleParts.collect {
+            it.getText('UTF-8').replaceAll('\\s', '')
+        }.join('')
         byte[] imageBytes = java.util.Base64.getDecoder().decode(encodedTemple)
         targetIcon.bytes = imageBytes
         targetWidgetScene.bytes = imageBytes
