@@ -195,13 +195,6 @@ public class MainActivity extends Activity {
             "• מקשי 2/8 מעבירים מיקוד, 4 מחליף פסוק, 6 מחליף עיצוב, 5/אישור מפעיל כפתור ו־0 מרענן את המניין.\n" +
             "• להוספת ווידג׳ט: לחיצה ארוכה במסך הבית, פתיחת ווידג׳טים ובחירת הגודל הרצוי.");
 
-        addAboutSection(page, "בדיקת תמיכה בווידג׳טים",
-            widgetSupportDetails());
-
-        addAboutSection(page, "גדלי ווידג׳ט",
-            "יש להוסיף את הווידג׳ט היחיד של האפליקציה, ולאחר הוספתו אפשר לשנות את גודלו במסך הבית באמצעות ידיות שינוי הגודל, אם משגר הבית תומך בכך. " +
-            "המידות הזמינות בפועל תלויות במשגר ובשטח הפנוי במסך.");
-
         addAboutSection(page, "חורבן בית המקדש השני",
             "לפי המסורת, בית המקדש השני חרב בט׳ באב בשנת ג׳תת״ל (3830 לבריאת העולם), בשנת 70 לספירה.\n" +
             "בהמרה חשבונית לאחור, התאריך הלועזי המקביל מוערך בקירוב כ־2 באוגוסט 70, אך תאריכים אזרחיים מתקופה זו אינם ודאיים.\n" +
@@ -247,32 +240,6 @@ public class MainActivity extends Activity {
             });
         });
         dialog.show();
-    }
-
-    private String widgetSupportDetails() {
-        boolean systemSupportsWidgets =
-            getPackageManager().hasSystemFeature("android.software.app_widgets");
-        int appProviders = 0;
-        try {
-            for (AppWidgetProviderInfo info :
-                    AppWidgetManager.getInstance(this).getInstalledProviders()) {
-                if (info.provider != null
-                        && getPackageName().equals(info.provider.getPackageName())) {
-                    appProviders++;
-                }
-            }
-        } catch (RuntimeException ignored) {
-            return "לא ניתן לקבל מידע על משגר מסך הבית. אם מתקבלת הודעה שאי אפשר להוסיף ווידג׳ט, ייתכן שמשגר המכשיר אינו תומך באירוח ווידג׳טים.";
-        }
-
-        if (!systemSupportsWidgets) {
-            return "מערכת המכשיר אינה מצהירה על תמיכה בווידג׳טים במסך הבית. האפליקציה רשמה "
-                + appProviders + " תצוגות ווידג׳ט, אך המשגר עצמו עשוי שלא לאפשר להוסיף אותן. "
-                + "במקרה כזה נדרש משגר שתומך בווידג׳טים.";
-        }
-        return "מערכת Android מדווחת על תמיכה בווידג׳טים, ונמצאו "
-            + appProviders + " תצוגות של האפליקציה. אם עדיין מתקבלת הודעת שגיאה, "
-            + "ייתכן שמשגר מסך הבית או המקום הפנוי במסך מגבילים את ההוספה.";
     }
 
     private void addAboutSection(LinearLayout parent, String heading, String details) {
