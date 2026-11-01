@@ -57,8 +57,9 @@ public class DayCounterWidget extends AppWidgetProvider {
     }
 
     private static int chooseLayout(int widthDp, int heightDp) {
-        if (widthDp > 0 && widthDp < 90) return R.layout.day_counter_widget_narrow;
+        // Height must be checked first: narrow, vertical 1x3 widgets can also be <90dp wide.
         if (heightDp > 0 && heightDp < 70) return R.layout.day_counter_widget_compact;
+        if (widthDp > 0 && widthDp < 90) return R.layout.day_counter_widget_narrow;
         if (widthDp > 0 && widthDp < 150) return R.layout.day_counter_widget_square;
         if (heightDp > 0 && heightDp < 150) return R.layout.day_counter_widget_compact;
         return R.layout.day_counter_widget_large;
