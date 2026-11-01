@@ -9,8 +9,8 @@ android {
         applicationId 'org.zochrim.imitzaphim'
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 13
-        versionName '2.4.7'
+        versionCode 14
+        versionName '1.0'
     }
 
     compileOptions {
@@ -21,16 +21,16 @@ android {
 
 // Materialize source artwork from text files before Android resource processing.
 tasks.register('decodeLauncherAssets') {
-    def sourceWidgetScene = file('icon-src/widget_temple_scene.jpg.b64')
-    def targetIcon = file('src/main/res/drawable-nodpi/ic_launcher.jpg')
-    def targetWidgetScene = file('src/main/res/drawable-nodpi/widget_temple_scene.jpg')
-    inputs.file(sourceWidgetScene)
+    def sourceTemple = file('icon-src/temple_cutout.png.b64')
+    def targetIcon = file('src/main/res/drawable-nodpi/ic_launcher.png')
+    def targetWidgetScene = file('src/main/res/drawable-nodpi/widget_temple_scene.png')
+    inputs.file(sourceTemple)
     outputs.files(targetIcon, targetWidgetScene)
     doLast {
         targetIcon.parentFile.mkdirs()
         targetWidgetScene.parentFile.mkdirs()
-        String encodedScene = sourceWidgetScene.getText('UTF-8').replaceAll('\\s', '')
-        byte[] imageBytes = java.util.Base64.getDecoder().decode(encodedScene)
+        String encodedTemple = sourceTemple.getText('UTF-8').replaceAll('\\s', '')
+        byte[] imageBytes = java.util.Base64.getDecoder().decode(encodedTemple)
         targetIcon.bytes = imageBytes
         targetWidgetScene.bytes = imageBytes
     }

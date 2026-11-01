@@ -12,15 +12,15 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:contentDescription="בית המקדש"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_launcher" />
+        android:scaleType="fitCenter"
+        android:src="@drawable/widget_temple_scene" />
     <TextView
         android:id="@+id/widget_count"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="714,498"
         android:textColor="#FFFFC94D"
-        android:textSize="13sp"
+        android:textSize="15sp"
         android:textStyle="bold"
         android:gravity="center"
         android:singleLine="true"
@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:text="ימים בלי בית מקדש"
         android:textColor="#FFFFF4D8"
-        android:textSize="8sp"
+        android:textSize="9sp"
         android:gravity="center"
         android:singleLine="true"
         android:ellipsize="end"

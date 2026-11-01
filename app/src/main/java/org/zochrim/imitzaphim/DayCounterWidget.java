@@ -10,7 +10,7 @@ import android.os.Bundle;
 import android.widget.RemoteViews;
 import java.util.Locale;
 
-/** Resizable Temple-day widget with size-aware layouts for narrow, compact and large placements. */
+/** One resizable widget, with static layouts matching each app color theme. */
 public class DayCounterWidget extends AppWidgetProvider {
     private static final String[] VERSES = {
         "אִם אֶשְׁכָּחֵךְ יְרוּשָׁלָ‍ִם תִּשְׁכַּח יְמִינִי",
@@ -45,12 +45,48 @@ public class DayCounterWidget extends AppWidgetProvider {
         updateIds(context, manager, ids);
     }
 
+    private static int normalized(int value, int length) {
+        return ((value % length) + length) % length;
+    }
+
+    private static int chooseLayout(int widthDp, int heightDp, int theme) {
+        // Keep the three stable size classes from the original single-provider widget.
+        final int size;
+        if (heightDp > 0 && heightDp < 70) {
+            size = 1; // Medium: compact horizontal layout.
+        } else if (widthDp > 0 && widthDp < 90) {
+            size = 0; // Narrow: tall compact layout.
+        } else {
+            size = 2; // Large: Temple picture above the text.
+        }
+        switch (theme) {
+            case 1:
+                if (size == 0) return R.layout.day_counter_widget_narrow_green;
+                if (size == 1) return R.layout.day_counter_widget_compact_green;
+                return R.layout.day_counter_widget_large_green;
+            case 2:
+                if (size == 0) return R.layout.day_counter_widget_narrow_light;
+                if (size == 1) return R.layout.day_counter_widget_compact_light;
+                return R.layout.day_counter_widget_large_light;
+            case 3:
+                if (size == 0) return R.layout.day_counter_widget_narrow_dark;
+                if (size == 1) return R.layout.day_counter_widget_compact_dark;
+                return R.layout.day_counter_widget_large_dark;
+            default:
+                if (size == 0) return R.layout.day_counter_widget_narrow;
+                if (size == 1) return R.layout.day_counter_widget_compact;
+                return R.layout.day_counter_widget_large;
+        }
+    }
+
     private static void updateIds(Context context, AppWidgetManager manager, int[] ids) {
-        if (ids == null) return;
+        if (ids == null || ids.length == 0) return;
+
         long days = DayCounter.daysElapsed();
-        int quoteIndex = context.getSharedPreferences("zochrim", Context.MODE_PRIVATE)
-            .getInt("quote", 0);
-        String verse = VERSES[Math.abs(quoteIndex) % VERSES.length];
+        android.content.SharedPreferences prefs =
+            context.getSharedPreferences("zochrim", Context.MODE_PRIVATE);
+        int quoteIndex = normalized(prefs.getInt("quote", 0), VERSES.length);
+        int theme = normalized(prefs.getInt("theme", 0), 4);
 
         Intent launch = new Intent(context, MainActivity.class);
         launch.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -64,21 +100,12 @@ public class DayCounterWidget extends AppWidgetProvider {
             int heightDp = options == null ? 0 :
                 options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
 
-            int layout;
-            if (heightDp > 0 && heightDp < 70) {
-                layout = R.layout.day_counter_widget_compact;
-            } else if (widthDp > 0 && widthDp < 90) {
-                layout = R.layout.day_counter_widget_narrow;
-            } else {
-                layout = R.layout.day_counter_widget_large;
-            }
-
-            RemoteViews views = new RemoteViews(context.getPackageName(), layout);
+            RemoteViews views = new RemoteViews(context.getPackageName(),
+                chooseLayout(widthDp, heightDp, theme));
             views.setTextViewText(R.id.widget_count,
                 String.format(Locale.getDefault(), "%,d", days));
             views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");
-            views.setTextViewText(R.id.widget_quote, verse);
-            views.setImageViewResource(R.id.widget_temple_image, R.drawable.ic_launcher);
+            views.setTextViewText(R.id.widget_quote, VERSES[quoteIndex]);
             views.setOnClickPendingIntent(R.id.widget_root, pending);
             manager.updateAppWidget(id, views);
         }
