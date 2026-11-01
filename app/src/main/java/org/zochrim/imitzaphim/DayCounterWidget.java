@@ -33,7 +33,6 @@ public class DayCounterWidget extends AppWidgetProvider {
         String action = intent == null ? null : intent.getAction();
         if (Intent.ACTION_DATE_CHANGED.equals(action)
                 || Intent.ACTION_TIME_CHANGED.equals(action)
-                || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
                 || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {
             updateAll(context);
         }
