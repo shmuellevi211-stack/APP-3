@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_description">מונה ימים בלי בית מקדש עם תמונה, פסוק ובחירת תצוגה</string>
-<string name="widget_small_description">ווידג׳ט קטן: מראה קומפקטי עם תמונת בית המקדש מוגדלת</string>
-        <string name="widget_medium_description">ווידג׳ט בינוני: מספר וכיתוב מוגדלים ופסוק קריא</string>
-    <string name="widget_large_description">ווידג׳ט גדול: תמונת בית המקדש למעלה ומתחתיה מספר, כיתוב ופסוק</string>
+    <string name="widget_description">מונה ימים בלי בית מקדש עם מספר גדול, פסוק ובחירת צבע</string>
+    <string name="widget_small_description">ווידג׳ט קטן עם מספר ימים בולט וכיתוב קצר</string>
+    <string name="widget_medium_description">ווידג׳ט בינוני עם מספר גדול, כיתוב ופסוק</string>
+    <string name="widget_large_description">ווידג׳ט גדול עם מספר בולט במיוחד, כיתוב ופסוק</string>
 </resources>

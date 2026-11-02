@@ -9,7 +9,7 @@ android {
         applicationId 'org.zochrim.imitzaphim'
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 18
+        versionCode 19
         versionName '1.0'
     }
 
@@ -17,27 +17,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-}
-
-// Materialize source artwork from text files before Android resource processing.
-tasks.register('decodeLauncherAssets') {
-    // Restore the original uploaded artwork, including its paper background.
-    def sourceWidgetScene = file('icon-src/widget_temple_scene.jpg.b64')
-    def targetIcon = file('src/main/res/drawable-nodpi/ic_launcher.jpg')
-    def targetWidgetScene = file('src/main/res/drawable-nodpi/widget_temple_scene.jpg')
-    inputs.file(sourceWidgetScene)
-    outputs.files(targetIcon, targetWidgetScene)
-    doLast {
-        targetIcon.parentFile.mkdirs()
-        targetWidgetScene.parentFile.mkdirs()
-        String encodedScene = sourceWidgetScene.getText('UTF-8').replaceAll('\\s', '')
-        byte[] imageBytes = java.util.Base64.getDecoder().decode(encodedScene)
-        targetIcon.bytes = imageBytes
-        targetWidgetScene.bytes = imageBytes
-    }
-}
-tasks.named('preBuild').configure {
-    dependsOn('decodeLauncherAssets')
 }
 
 dependencies {

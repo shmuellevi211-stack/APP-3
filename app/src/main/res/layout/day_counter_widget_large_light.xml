@@ -7,53 +7,41 @@
     android:gravity="center"
     android:padding="4dp"
     android:background="@drawable/widget_background_light">
-    <ImageView
-        android:id="@+id/widget_temple_image"
-        android:layout_width="88dp"
-        android:layout_height="76dp"
-        android:layout_gravity="center"
-        android:contentDescription="בית המקדש"
-        android:scaleType="fitCenter"
-        android:src="@drawable/widget_temple_scene" />
-    <LinearLayout
+    <TextView
+        android:id="@+id/widget_count"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
+        android:text="714,498"
+        android:textColor="#FF317A91"
+        android:textSize="50sp"
+        android:textStyle="bold"
         android:gravity="center"
-        android:paddingStart="2dp"
-        android:paddingEnd="2dp">
-        <TextView
-            android:id="@+id/widget_count"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="714,498"
-            android:textColor="#FF317A91"
-            android:textSize="42sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:singleLine="true"
-            android:ellipsize="end" />
-        <TextView
-            android:id="@+id/widget_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="ימים בלי בית מקדש"
-            android:textColor="#FF172D38"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:singleLine="true"
-            android:ellipsize="end" />
-        <TextView
-            android:id="@+id/widget_quote"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="אם אשכחך ירושלים תשכח ימיני"
-            android:textColor="#FF172D38"
-            android:textSize="13sp"
-            android:gravity="center"
-            android:maxLines="3"
-            android:ellipsize="end" />
-    </LinearLayout>
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:includeFontPadding="false" />
+    <TextView
+        android:id="@+id/widget_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:text="ימים בלי בית מקדש"
+        android:textColor="#FF172D38"
+        android:textSize="19sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:includeFontPadding="false" />
+    <TextView
+        android:id="@+id/widget_quote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:text="אם אשכחך ירושלים תשכח ימיני"
+        android:textColor="#FF172D38"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:maxLines="3"
+        android:ellipsize="end"
+        android:includeFontPadding="false" />
 </LinearLayout>
