@@ -8,6 +8,8 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -24,6 +26,16 @@ public class MainActivity extends Activity {
     private TextView countView, dateView, quoteView, sourceView;
     private Button quoteButton, themeButton, widgetThemeButton, dayChangeButton, guideButton;
     private int theme = 0, quoteIndex = 0;
+    private final Handler counterHandler = new Handler(Looper.getMainLooper());
+    private final Runnable counterRefresh = new Runnable() {
+        @Override public void run() {
+            if (countView != null && prefs != null) {
+                long days = DayCounter.daysElapsed(prefs.getBoolean("nightfall_mode", false));
+                countView.setText(String.format(Locale.getDefault(), "%,d", days));
+                counterHandler.postDelayed(this, 60000L);
+            }
+        }
+    };
 
     private final String[] quotes = {
         "אִם אֶשְׁכָּחֵךְ יְרוּשָׁלָ‍ִם תִּשְׁכַּח יְמִינִי",
@@ -56,6 +68,19 @@ public class MainActivity extends Activity {
         quoteIndex = normalizedIndex(prefs.getInt("quote", 0), quotes.length);
         buildUi();
         refreshCounter();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        if (countView != null) {
+            counterHandler.removeCallbacks(counterRefresh);
+            counterRefresh.run();
+        }
+    }
+
+    @Override protected void onPause() {
+        counterHandler.removeCallbacks(counterRefresh);
+        super.onPause();
     }
 
     private GradientDrawable shape(int color, int radius, int strokeColor) {
