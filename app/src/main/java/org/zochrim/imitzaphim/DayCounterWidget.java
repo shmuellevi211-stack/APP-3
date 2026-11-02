@@ -19,8 +19,9 @@ import java.util.Locale;
 public class DayCounterWidget extends AppWidgetProvider {
     private static final String ACTION_BOUNDARY =
         "org.zochrim.imitzaphim.ACTION_COUNTER_BOUNDARY";
-    protected static final int SIZE_MEDIUM = 0;
-    protected static final int SIZE_LARGE = 1;
+    protected static final int SIZE_SMALL = 0;
+    protected static final int SIZE_MEDIUM = 1;
+    protected static final int SIZE_LARGE = 2;
 
     private static final String[] VERSES = {
         "אִם אֶשְׁכָּחֵךְ יְרוּשָׁלָ‍ִם תִּשְׁכַּח יְמִינִי",
@@ -61,15 +62,19 @@ public class DayCounterWidget extends AppWidgetProvider {
     /** Updates all installed widget types from one shared set of preferences. */
     public static void updateAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        int[] smallIds = manager.getAppWidgetIds(
+            new ComponentName(context, DayCounterSmallWidget.class));
         int[] mediumIds = manager.getAppWidgetIds(
             new ComponentName(context, DayCounterWidget.class));
         int[] largeIds = manager.getAppWidgetIds(
             new ComponentName(context, DayCounterLargeWidget.class));
 
-        boolean hasWidgets = (mediumIds != null && mediumIds.length > 0)
+        boolean hasWidgets = (smallIds != null && smallIds.length > 0)
+            || (mediumIds != null && mediumIds.length > 0)
             || (largeIds != null && largeIds.length > 0);
         if (!hasWidgets) return;
 
+        updateIds(context, manager, smallIds, SIZE_SMALL);
         updateIds(context, manager, mediumIds, SIZE_MEDIUM);
         updateIds(context, manager, largeIds, SIZE_LARGE);
         scheduleNextUpdate(context);
@@ -112,6 +117,14 @@ public class DayCounterWidget extends AppWidgetProvider {
                 case 2: return R.layout.day_counter_widget_large_light;
                 case 3: return R.layout.day_counter_widget_large_dark;
                 default: return R.layout.day_counter_widget_large;
+            }
+        }
+        if (sizeClass == SIZE_SMALL) {
+            switch (theme) {
+                case 1: return R.layout.day_counter_widget_small_green;
+                case 2: return R.layout.day_counter_widget_small_light;
+                case 3: return R.layout.day_counter_widget_small_dark;
+                default: return R.layout.day_counter_widget_small;
             }
         }
         switch (theme) {

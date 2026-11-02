@@ -9,8 +9,8 @@
     android:background="@drawable/widget_background_light">
     <ImageView
         android:id="@+id/widget_temple_image"
-        android:layout_width="42dp"
-        android:layout_height="42dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:contentDescription="בית המקדש"
         android:scaleType="fitCenter"
         android:src="@drawable/widget_temple_scene" />
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:text="714,498"
             android:textColor="#FF317A91"
-            android:textSize="27sp"
+            android:textSize="29sp"
             android:textStyle="bold"
             android:gravity="center"
             android:singleLine="true"
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:text="ימים בלי בית מקדש"
             android:textColor="#FF172D38"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:gravity="center"
             android:maxLines="2"
             android:ellipsize="end"
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:text="אם אשכחך ירושלים תשכח ימיני"
             android:textColor="#FF172D38"
-            android:textSize="11sp"
+            android:textSize="12sp"
             android:gravity="center"
             android:maxLines="2"
             android:ellipsize="end"
