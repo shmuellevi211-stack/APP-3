@@ -1,8 +1,6 @@
 package org.zochrim.imitzaphim;
 
 import android.app.Activity;
-import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProviderInfo;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -165,14 +163,14 @@ public class MainActivity extends Activity {
         sourceView = text("", 10, p[2], false);
         content.addView(sourceView, new LinearLayout.LayoutParams(-1, -2));
 
-        quoteButton = button("4  •  משפט אחר מהמקורות", p[1], p[3]);
+        quoteButton = button("משפט אחר מהמקורות", p[1], p[3]);
         quoteButton.setId(View.generateViewId());
         LinearLayout.LayoutParams qp = new LinearLayout.LayoutParams(-1, -2);
         qp.setMargins(0, dp(5), 0, dp(3));
         content.addView(quoteButton, qp);
         quoteButton.setOnClickListener(v -> advanceQuote());
 
-        themeButton = button("6  •  החלפת עיצוב", p[1], p[3]);
+        themeButton = button("החלפת עיצוב", p[1], p[3]);
         themeButton.setId(View.generateViewId());
         content.addView(themeButton, new LinearLayout.LayoutParams(-1, -2));
         themeButton.setOnClickListener(v -> advanceTheme());
@@ -197,7 +195,7 @@ public class MainActivity extends Activity {
             navigationButtons[i].setNextFocusDownId(navigationButtons[(i + 1) % navigationButtons.length].getId());
             navigationButtons[i].setNextFocusUpId(navigationButtons[(i + navigationButtons.length - 1) % navigationButtons.length].getId());
         }
-        TextView foot = text("ניווט: חצים ואישור  •  2/8 מעבר  •  4/6 פעולה  •  0 רענון", 9, p[3], false);
+        TextView foot = text("ניווט: מקשי החצים  •  הפעלה: אישור", 9, p[3], false);
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2);
         fp.setMargins(0, dp(3), 0, 0);
         content.addView(foot, fp);
@@ -261,18 +259,42 @@ public class MainActivity extends Activity {
             .setPositiveButton("סגירה", null)
             .create();
         dialog.setOnShowListener(ignored -> {
+            Button closeButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            closeButton.setOnClickListener(v -> dialog.dismiss());
+            closeButton.setFocusable(true);
+            closeButton.setFocusableInTouchMode(true);
             scroller.requestFocus();
+
             dialog.setOnKeyListener((shownDialog, keyCode, event) -> {
                 if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
-                int amount = Math.max(dp(48), scroller.getHeight() / 2);
-                if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_8
-                        || keyCode == KeyEvent.KEYCODE_PAGE_DOWN || keyCode == KeyEvent.KEYCODE_9) {
-                    scroller.smoothScrollBy(0, amount);
+
+                // The select/confirm key always activates the visible dialog's close action,
+                // rather than accidentally activating a button behind the dialog.
+                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                        || keyCode == KeyEvent.KEYCODE_ENTER
+                        || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+                        || keyCode == KeyEvent.KEYCODE_BUTTON_A) {
+                    closeButton.performClick();
                     return true;
                 }
-                if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_2
-                        || keyCode == KeyEvent.KEYCODE_PAGE_UP || keyCode == KeyEvent.KEYCODE_7) {
-                    scroller.smoothScrollBy(0, -amount);
+
+                int amount = Math.max(dp(48), scroller.getHeight() / 2);
+                if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+                        || keyCode == KeyEvent.KEYCODE_PAGE_DOWN) {
+                    if (scroller.canScrollVertically(1)) {
+                        scroller.smoothScrollBy(0, amount);
+                    } else {
+                        closeButton.requestFocus();
+                    }
+                    return true;
+                }
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP
+                        || keyCode == KeyEvent.KEYCODE_PAGE_UP) {
+                    if (closeButton.hasFocus()) {
+                        scroller.requestFocus();
+                    } else if (scroller.canScrollVertically(-1)) {
+                        scroller.smoothScrollBy(0, -amount);
+                    }
                     return true;
                 }
                 return false;
@@ -297,7 +319,7 @@ public class MainActivity extends Activity {
         detailView.setGravity(Gravity.RIGHT);
         detailView.setTextDirection(View.TEXT_DIRECTION_RTL);
         detailView.setLineSpacing(dp(4), 1.0f);
-        detailView.setTextIsSelectable(true);
+        detailView.setTextIsSelectable(false);
         card.addView(detailView, new LinearLayout.LayoutParams(-1, -2));
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
@@ -391,33 +413,29 @@ public class MainActivity extends Activity {
     }
 
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Phones with numeric keypads often expose 2/8/4/6/5 as the easiest controls.
-        if (keyCode == KeyEvent.KEYCODE_2) { moveButtonFocus(false); return true; }
-        if (keyCode == KeyEvent.KEYCODE_8) { moveButtonFocus(true); return true; }
-        if (keyCode == KeyEvent.KEYCODE_4) { advanceQuote(); return true; }
-        if (keyCode == KeyEvent.KEYCODE_6) { advanceTheme(); return true; }
-        if (keyCode == KeyEvent.KEYCODE_5
-                || keyCode == KeyEvent.KEYCODE_DPAD_CENTER
-                || keyCode == KeyEvent.KEYCODE_ENTER
-                || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) {
-            View current = getCurrentFocus();
-            if (current != null && current.isClickable()) { current.performClick(); return true; }
-            quoteButton.performClick();
+        // Navigation is intentionally limited to the directional pad and its confirm key.
+        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+            moveButtonFocus(false);
             return true;
         }
-        if (keyCode == KeyEvent.KEYCODE_1 || keyCode == KeyEvent.KEYCODE_STAR) {
-            advanceQuote(); return true;
+        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+            moveButtonFocus(true);
+            return true;
         }
-        if (keyCode == KeyEvent.KEYCODE_3 || keyCode == KeyEvent.KEYCODE_POUND) {
-            advanceTheme(); return true;
+        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            moveButtonFocus(keyCode == KeyEvent.KEYCODE_DPAD_LEFT);
+            return true;
         }
-        if (keyCode == KeyEvent.KEYCODE_7) { quoteButton.requestFocus(); return true; }
-        if (keyCode == KeyEvent.KEYCODE_9) { themeButton.requestFocus(); return true; }
-        if (keyCode == KeyEvent.KEYCODE_0) { refreshCounter(); return true; }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) { moveButtonFocus(false); return true; }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) { moveButtonFocus(true); return true; }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            moveButtonFocus(keyCode == KeyEvent.KEYCODE_DPAD_LEFT); return true;
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                || keyCode == KeyEvent.KEYCODE_ENTER
+                || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+                || keyCode == KeyEvent.KEYCODE_BUTTON_A) {
+            View current = getCurrentFocus();
+            if (current != null && current.isClickable()) {
+                current.performClick();
+                return true;
+            }
         }
         return super.onKeyDown(keyCode, event);
     }
