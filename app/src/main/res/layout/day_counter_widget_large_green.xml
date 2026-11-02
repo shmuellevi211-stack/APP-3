@@ -3,24 +3,25 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:padding="6dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="4dp"
     android:background="@drawable/widget_background_green">
     <ImageView
         android:id="@+id/widget_temple_image"
-        android:layout_width="76dp"
-        android:layout_height="90dp"
+        android:layout_width="88dp"
+        android:layout_height="76dp"
+        android:layout_gravity="center"
         android:contentDescription="בית המקדש"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_launcher" />
+        android:scaleType="fitCenter"
+        android:src="@drawable/widget_temple_scene" />
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:paddingStart="6dp"
+        android:paddingStart="2dp"
         android:paddingEnd="2dp">
         <TextView
             android:id="@+id/widget_count"
@@ -28,7 +29,7 @@
             android:layout_height="wrap_content"
             android:text="714,498"
             android:textColor="#FFD8B968"
-            android:textSize="30sp"
+            android:textSize="42sp"
             android:textStyle="bold"
             android:gravity="center"
             android:singleLine="true"
@@ -39,7 +40,7 @@
             android:layout_height="wrap_content"
             android:text="ימים בלי בית מקדש"
             android:textColor="#FFF4F0E4"
-            android:textSize="12sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:gravity="center"
             android:singleLine="true"
@@ -50,7 +51,7 @@
             android:layout_height="wrap_content"
             android:text="אם אשכחך ירושלים תשכח ימיני"
             android:textColor="#FFF4F0E4"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:gravity="center"
             android:maxLines="3"
             android:ellipsize="end" />

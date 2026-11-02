@@ -7,20 +7,20 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.RemoteViews;
 import java.util.Locale;
 
-/** One resizable widget with independent color and persistent size-class selection. */
+/**
+ * Medium widget provider. A separate Large provider is listed in the Android widget picker,
+ * so choosing a design does not depend on unreliable launcher-specific resize thresholds.
+ */
 public class DayCounterWidget extends AppWidgetProvider {
     private static final String ACTION_BOUNDARY =
         "org.zochrim.imitzaphim.ACTION_COUNTER_BOUNDARY";
-    private static final String SIZE_KEY_PREFIX = "widget_size_";
-    private static final int SIZE_NARROW = 0;
-    private static final int SIZE_COMPACT = 1;
-    private static final int SIZE_LARGE = 2;
+    protected static final int SIZE_MEDIUM = 0;
+    protected static final int SIZE_LARGE = 1;
 
     private static final String[] VERSES = {
         "אִם אֶשְׁכָּחֵךְ יְרוּשָׁלָ‍ִם תִּשְׁכַּח יְמִינִי",
@@ -29,27 +29,21 @@ public class DayCounterWidget extends AppWidgetProvider {
         "כָּל הַמִּתְאַבֵּל עַל יְרוּשָׁלַיִם זוֹכֶה וְרוֹאֶה בְּשִׂמְחָתָהּ"
     };
 
+    /** The base provider is the medium layout. */
+    protected int getLayoutSizeClass() {
+        return SIZE_MEDIUM;
+    }
+
     @Override public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
-        updateIds(context, manager, appWidgetIds);
+        updateIds(context, manager, appWidgetIds, getLayoutSizeClass());
         if (appWidgetIds != null && appWidgetIds.length > 0) scheduleNextUpdate(context);
     }
 
     @Override public void onAppWidgetOptionsChanged(Context context, AppWidgetManager manager,
                                                     int appWidgetId, Bundle newOptions) {
-        // The launcher calls this after a resize. Persist the selected layout class so a reboot
-        // or the launcher's first refresh cannot silently change the widget's appearance.
-        rememberSizeClass(context, appWidgetId, newOptions);
-        updateIds(context, manager, new int[]{appWidgetId});
+        // Keep this provider's layout identity when the launcher changes its outer bounds.
+        updateIds(context, manager, new int[]{appWidgetId}, getLayoutSizeClass());
         scheduleNextUpdate(context);
-    }
-
-    @Override public void onDeleted(Context context, int[] appWidgetIds) {
-        super.onDeleted(context, appWidgetIds);
-        if (appWidgetIds == null) return;
-        SharedPreferences.Editor editor =
-            context.getSharedPreferences("zochrim", Context.MODE_PRIVATE).edit();
-        for (int id : appWidgetIds) editor.remove(SIZE_KEY_PREFIX + id);
-        editor.apply();
     }
 
     @Override public void onReceive(Context context, Intent intent) {
@@ -64,19 +58,27 @@ public class DayCounterWidget extends AppWidgetProvider {
         }
     }
 
+    /** Updates all installed widget types from one shared set of preferences. */
     public static void updateAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        int[] ids = manager.getAppWidgetIds(
+        int[] mediumIds = manager.getAppWidgetIds(
             new ComponentName(context, DayCounterWidget.class));
-        if (ids != null && ids.length > 0) {
-            updateIds(context, manager, ids);
-            scheduleNextUpdate(context);
-        }
+        int[] largeIds = manager.getAppWidgetIds(
+            new ComponentName(context, DayCounterLargeWidget.class));
+
+        boolean hasWidgets = (mediumIds != null && mediumIds.length > 0)
+            || (largeIds != null && largeIds.length > 0);
+        if (!hasWidgets) return;
+
+        updateIds(context, manager, mediumIds, SIZE_MEDIUM);
+        updateIds(context, manager, largeIds, SIZE_LARGE);
+        scheduleNextUpdate(context);
     }
 
     /** Schedules the next midnight or estimated Jerusalem nightfall boundary. */
     public static void scheduleNextUpdate(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences("zochrim", Context.MODE_PRIVATE);
+        android.content.SharedPreferences prefs =
+            context.getSharedPreferences("zochrim", Context.MODE_PRIVATE);
         boolean nightfallMode = prefs.getBoolean("nightfall_mode", false);
         long triggerAt = DayCounter.nextBoundaryMillis(nightfallMode);
 
@@ -103,67 +105,28 @@ public class DayCounterWidget extends AppWidgetProvider {
         return ((value % length) + length) % length;
     }
 
-    private static int inferSizeClass(Bundle options) {
-        int widthDp = options == null ? 0
-            : options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
-        int heightDp = options == null ? 0
-            : options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
-
-        if (widthDp <= 0 && options != null) {
-            widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH);
-        }
-        if (heightDp <= 0 && options != null) {
-            heightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT);
-        }
-
-        if (heightDp > 0 && heightDp < 70 && widthDp >= 90) return SIZE_COMPACT;
-        if (widthDp > 0 && widthDp < 90) return SIZE_NARROW;
-        if (heightDp > 0 && heightDp < 70) return SIZE_COMPACT;
-        return SIZE_LARGE;
-    }
-
-    private static void rememberSizeClass(Context context, int appWidgetId, Bundle options) {
-        int sizeClass = inferSizeClass(options);
-        context.getSharedPreferences("zochrim", Context.MODE_PRIVATE)
-            .edit().putInt(SIZE_KEY_PREFIX + appWidgetId, sizeClass).apply();
-    }
-
-    private static int savedSizeClass(Context context, int appWidgetId, Bundle options) {
-        SharedPreferences prefs = context.getSharedPreferences("zochrim", Context.MODE_PRIVATE);
-        String key = SIZE_KEY_PREFIX + appWidgetId;
-        int saved = prefs.getInt(key, -1);
-        if (saved >= SIZE_NARROW && saved <= SIZE_LARGE) return saved;
-
-        int inferred = inferSizeClass(options);
-        prefs.edit().putInt(key, inferred).apply();
-        return inferred;
-    }
-
     private static int chooseLayout(int sizeClass, int theme) {
+        if (sizeClass == SIZE_LARGE) {
+            switch (theme) {
+                case 1: return R.layout.day_counter_widget_large_green;
+                case 2: return R.layout.day_counter_widget_large_light;
+                case 3: return R.layout.day_counter_widget_large_dark;
+                default: return R.layout.day_counter_widget_large;
+            }
+        }
         switch (theme) {
-            case 1:
-                if (sizeClass == SIZE_NARROW) return R.layout.day_counter_widget_narrow_green;
-                if (sizeClass == SIZE_COMPACT) return R.layout.day_counter_widget_compact_green;
-                return R.layout.day_counter_widget_large_green;
-            case 2:
-                if (sizeClass == SIZE_NARROW) return R.layout.day_counter_widget_narrow_light;
-                if (sizeClass == SIZE_COMPACT) return R.layout.day_counter_widget_compact_light;
-                return R.layout.day_counter_widget_large_light;
-            case 3:
-                if (sizeClass == SIZE_NARROW) return R.layout.day_counter_widget_narrow_dark;
-                if (sizeClass == SIZE_COMPACT) return R.layout.day_counter_widget_compact_dark;
-                return R.layout.day_counter_widget_large_dark;
-            default:
-                if (sizeClass == SIZE_NARROW) return R.layout.day_counter_widget_narrow;
-                if (sizeClass == SIZE_COMPACT) return R.layout.day_counter_widget_compact;
-                return R.layout.day_counter_widget_large;
+            case 1: return R.layout.day_counter_widget_compact_green;
+            case 2: return R.layout.day_counter_widget_compact_light;
+            case 3: return R.layout.day_counter_widget_compact_dark;
+            default: return R.layout.day_counter_widget_compact;
         }
     }
 
-    private static void updateIds(Context context, AppWidgetManager manager, int[] ids) {
+    private static void updateIds(Context context, AppWidgetManager manager, int[] ids,
+                                  int sizeClass) {
         if (ids == null || ids.length == 0) return;
 
-        SharedPreferences prefs =
+        android.content.SharedPreferences prefs =
             context.getSharedPreferences("zochrim", Context.MODE_PRIVATE);
         long days = DayCounter.daysElapsed(prefs.getBoolean("nightfall_mode", false));
         int quoteIndex = normalized(prefs.getInt("quote", 0), VERSES.length);
@@ -178,17 +141,14 @@ public class DayCounterWidget extends AppWidgetProvider {
         if (Build.VERSION.SDK_INT >= 23) pendingFlags |= PendingIntent.FLAG_IMMUTABLE;
         PendingIntent pending = PendingIntent.getActivity(context, 0, launch, pendingFlags);
 
-        for (int id : ids) {
-            Bundle options = manager.getAppWidgetOptions(id);
-            int sizeClass = savedSizeClass(context, id, options);
-            RemoteViews views = new RemoteViews(
-                context.getPackageName(), chooseLayout(sizeClass, widgetTheme));
-            views.setTextViewText(R.id.widget_count,
-                String.format(Locale.getDefault(), "%,d", days));
-            views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");
-            views.setTextViewText(R.id.widget_quote, VERSES[quoteIndex]);
-            views.setOnClickPendingIntent(R.id.widget_root, pending);
-            manager.updateAppWidget(id, views);
-        }
+        RemoteViews views = new RemoteViews(
+            context.getPackageName(), chooseLayout(sizeClass, widgetTheme));
+        views.setTextViewText(R.id.widget_count,
+            String.format(Locale.getDefault(), "%,d", days));
+        views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");
+        views.setTextViewText(R.id.widget_quote, VERSES[quoteIndex]);
+        views.setOnClickPendingIntent(R.id.widget_root, pending);
+
+        for (int id : ids) manager.updateAppWidget(id, views);
     }
 }
