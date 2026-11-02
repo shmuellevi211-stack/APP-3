@@ -1,8 +1,10 @@
 package org.zochrim.imitzaphim;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 import org.junit.Test;
 
 public class DayCounterTest {
@@ -28,6 +30,19 @@ public class DayCounterTest {
     public void leapDayIsCounted() {
         assertEquals(2L, DayCounter.daysBetween(
             2024, Calendar.FEBRUARY, 28, 2024, Calendar.MARCH, 1));
+    }
+
+    @Test
+    public void estimatedJerusalemNightfallIsInTheEarlyEvening() {
+        long instant = DayCounter.nightfallMillisForDate(
+            2026, Calendar.NOVEMBER, 2);
+        Calendar jerusalem = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jerusalem"));
+        jerusalem.setTimeInMillis(instant);
+        assertEquals(2026, jerusalem.get(Calendar.YEAR));
+        assertEquals(Calendar.NOVEMBER, jerusalem.get(Calendar.MONTH));
+        assertEquals(2, jerusalem.get(Calendar.DAY_OF_MONTH));
+        assertTrue(jerusalem.get(Calendar.HOUR_OF_DAY) >= 16);
+        assertTrue(jerusalem.get(Calendar.HOUR_OF_DAY) <= 18);
     }
 
     @Test

@@ -22,7 +22,7 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private SharedPreferences prefs;
     private TextView countView, dateView, quoteView, sourceView;
-    private Button quoteButton, themeButton, guideButton;
+    private Button quoteButton, themeButton, widgetThemeButton, dayChangeButton, guideButton;
     private int theme = 0, quoteIndex = 0;
 
     private final String[] quotes = {
@@ -152,15 +152,26 @@ public class MainActivity extends Activity {
         content.addView(themeButton, new LinearLayout.LayoutParams(-1, -2));
         themeButton.setOnClickListener(v -> advanceTheme());
 
+        widgetThemeButton = button(widgetThemeLabel(), p[1], p[3]);
+        widgetThemeButton.setId(View.generateViewId());
+        content.addView(widgetThemeButton, new LinearLayout.LayoutParams(-1, -2));
+        widgetThemeButton.setOnClickListener(v -> showWidgetThemeDialog());
+
+        dayChangeButton = button(dayChangeLabel(), p[1], p[3]);
+        dayChangeButton.setId(View.generateViewId());
+        content.addView(dayChangeButton, new LinearLayout.LayoutParams(-1, -2));
+        dayChangeButton.setOnClickListener(v -> showDayChangeDialog());
+
         guideButton = button("מדריך הפעלה", p[1], p[3]);
+        guideButton.setId(View.generateViewId());
         content.addView(guideButton, new LinearLayout.LayoutParams(-1, -2));
         guideButton.setOnClickListener(v -> showGuideAndAbout());
 
-        guideButton.setId(View.generateViewId());
-        quoteButton.setNextFocusDownId(themeButton.getId());
-        themeButton.setNextFocusUpId(quoteButton.getId());
-        themeButton.setNextFocusDownId(guideButton.getId());
-        guideButton.setNextFocusUpId(themeButton.getId());
+        View[] navigationButtons = {quoteButton, themeButton, widgetThemeButton, dayChangeButton, guideButton};
+        for (int i = 0; i < navigationButtons.length; i++) {
+            navigationButtons[i].setNextFocusDownId(navigationButtons[(i + 1) % navigationButtons.length].getId());
+            navigationButtons[i].setNextFocusUpId(navigationButtons[(i + navigationButtons.length - 1) % navigationButtons.length].getId());
+        }
         TextView foot = text("ניווט: חצים ואישור  •  2/8 מעבר  •  4/6 פעולה  •  0 רענון", 9, p[3], false);
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2);
         fp.setMargins(0, dp(3), 0, 0);
@@ -175,7 +186,7 @@ public class MainActivity extends Activity {
 
     private void refreshCounter() {
         if (countView == null) return;
-        long days = DayCounter.daysElapsed();
+        long days = DayCounter.daysElapsed(prefs.getBoolean("nightfall_mode", false));
         countView.setText(String.format(Locale.getDefault(), "%,d", days));
         dateView.setText("");
         updateQuote();
@@ -191,9 +202,11 @@ public class MainActivity extends Activity {
         addAboutSection(page, "מדריך הפעלה",
             "• המספר הראשי מציג את מניין הימים מתאריך הייחוס 5 באוגוסט 70 לספירה.\n" +
             "• ״משפט אחר מהמקורות״ מחליף את הפסוק המוצג.\n" +
-            "• ״החלפת עיצוב״ מחליפה בין ערכות הצבעים.\n" +
+            "• ״החלפת עיצוב״ מחליפה בין ערכות הצבעים של האפליקציה.\n" +
+            "• ניתן לבחור לווידג׳ט צבע עצמאי או להתאים אותו לצבע האפליקציה.\n" +
+            "• ניתן לבחור מתי המניין מתחלף: בחצות הלילה (ברירת מחדל) או בצאת הכוכבים בירושלים (חישוב משוער).\n" +
             "• מקשי 2/8 מעבירים מיקוד, 4 מחליף פסוק, 6 מחליף עיצוב, 5/אישור מפעיל כפתור ו־0 מרענן את המניין.\n" +
-            "• להוספת ווידג׳ט: לחיצה ארוכה במסך הבית, פתיחת ווידג׳טים ובחירת הגודל הרצוי.");
+            "• להוספת ווידג׳ט: לחיצה ארוכה במסך הבית, פתיחת ווידג׳טים והוספת הווידג׳ט למסך הבית.");
 
         addAboutSection(page, "חורבן בית המקדש השני",
             "לפי המסורת, בית המקדש השני חרב בט׳ באב בשנת ג׳תת״ל (3830 לבריאת העולם), בשנת 70 לספירה.\n" +
@@ -288,15 +301,67 @@ public class MainActivity extends Activity {
         if (themeButton != null) themeButton.requestFocus();
     }
 
+    private String widgetThemeLabel() {
+        int selected = prefs.getInt("widget_theme", -1);
+        String[] names = {"כחול", "ירוק", "לבן", "שחור"};
+        return selected < 0 ? "צבע הווידג׳ט: לפי האפליקציה"
+            : "צבע הווידג׳ט: " + names[normalizedIndex(selected, names.length)];
+    }
+
+    private String dayChangeLabel() {
+        return prefs.getBoolean("nightfall_mode", false)
+            ? "החלפת מספר: בצאת הכוכבים בירושלים"
+            : "החלפת מספר: בחצות הלילה";
+    }
+
+    private void showWidgetThemeDialog() {
+        final String[] options = {
+            "לפי צבע האפליקציה", "כחול", "ירוק", "לבן", "שחור"
+        };
+        int selected = prefs.getInt("widget_theme", -1) + 1;
+        new AlertDialog.Builder(this)
+            .setTitle("בחירת צבע לווידג׳ט")
+            .setSingleChoiceItems(options, selected, (dialog, which) -> {
+                prefs.edit().putInt("widget_theme", which - 1).apply();
+                widgetThemeButton.setText(widgetThemeLabel());
+                DayCounterWidget.updateAll(this);
+                dialog.dismiss();
+            })
+            .setNegativeButton("ביטול", null)
+            .show();
+    }
+
+    private void showDayChangeDialog() {
+        final String[] options = {
+            "בחצות הלילה (ברירת מחדל)",
+            "בצאת הכוכבים בירושלים (חישוב משוער)"
+        };
+        int selected = prefs.getBoolean("nightfall_mode", false) ? 1 : 0;
+        new AlertDialog.Builder(this)
+            .setTitle("מתי להחליף את מספר הימים?")
+            .setSingleChoiceItems(options, selected, (dialog, which) -> {
+                prefs.edit().putBoolean("nightfall_mode", which == 1).apply();
+                dayChangeButton.setText(dayChangeLabel());
+                refreshCounter();
+                DayCounterWidget.scheduleNextUpdate(this);
+                dialog.dismiss();
+            })
+            .setNegativeButton("ביטול", null)
+            .show();
+    }
+
     private void moveButtonFocus(boolean down) {
+        View[] buttons = {quoteButton, themeButton, widgetThemeButton, dayChangeButton, guideButton};
+        int currentIndex = 0;
         View current = getCurrentFocus();
-        if (current == quoteButton) {
-            if (down) themeButton.requestFocus(); else guideButton.requestFocus();
-        } else if (current == themeButton) {
-            if (down) guideButton.requestFocus(); else quoteButton.requestFocus();
-        } else {
-            if (down) quoteButton.requestFocus(); else themeButton.requestFocus();
+        for (int i = 0; i < buttons.length; i++) {
+            if (buttons[i] == current) {
+                currentIndex = i;
+                break;
+            }
         }
+        int nextIndex = (currentIndex + (down ? 1 : buttons.length - 1)) % buttons.length;
+        buttons[nextIndex].requestFocus();
     }
 
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
