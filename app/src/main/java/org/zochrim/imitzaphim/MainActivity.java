@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import java.util.Locale;
 
@@ -22,12 +24,12 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private SharedPreferences prefs;
     private TextView countView, dateView, quoteView, sourceView;
+    private TextView appTitleView, appSubtitleView, cardTitleView, counterLabelView, footerView;
     private Button quoteButton, themeButton, widgetThemeButton, dayChangeButton;
     private Button cornerRadiusButton, guideButton;
-    private ScrollView mainScroll;
+    private LinearLayout mainRoot, counterCard;
+    private boolean modalChoiceOpen = false;
     private int theme = 0, quoteIndex = 0;
-    private int pendingScrollY = 0;
-    private int pendingFocusIndex = 0;
     private final Handler counterHandler = new Handler(Looper.getMainLooper());
     private final Runnable counterRefresh = new Runnable() {
         @Override public void run() {
@@ -88,8 +90,7 @@ public class MainActivity extends Activity {
     private GradientDrawable shape(int color, int radius, int strokeColor) {
         GradientDrawable d = new GradientDrawable();
         d.setColor(color);
-        int selectedRadius = prefs == null ? radius : prefs.getInt("corner_radius_dp", 10);
-        d.setCornerRadius(dp(selectedRadius));
+        d.setCornerRadius(dp(radius));
         if (strokeColor != 0) d.setStroke(dp(2), strokeColor);
         return d;
     }
@@ -125,6 +126,7 @@ public class MainActivity extends Activity {
     private void buildUi() {
         final int[] p = palettes[theme];
         LinearLayout root = new LinearLayout(this);
+        mainRoot = root;
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(p[0]);
         root.setPadding(dp(8), dp(4), dp(8), dp(4));
@@ -137,12 +139,13 @@ public class MainActivity extends Activity {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setGravity(Gravity.CENTER_HORIZONTAL);
 
-        content.addView(text("בצאתי מירושלים", 21, p[2], true),
-            new LinearLayout.LayoutParams(-1, -2));
-        content.addView(text("זיכרון ירושלים • תפילה לבניין הבית", 11, p[3], false),
-            new LinearLayout.LayoutParams(-1, -2));
+        appTitleView = text("בצאתי מירושלים", 21, p[2], true);
+        content.addView(appTitleView, new LinearLayout.LayoutParams(-1, -2));
+        appSubtitleView = text("זיכרון ירושלים • תפילה לבניין הבית", 11, p[3], false);
+        content.addView(appSubtitleView, new LinearLayout.LayoutParams(-1, -2));
 
         LinearLayout card = new LinearLayout(this);
+        counterCard = card;
         card.setOrientation(LinearLayout.VERTICAL);
         card.setGravity(Gravity.CENTER);
         card.setPadding(dp(5), dp(6), dp(5), dp(6));
@@ -151,13 +154,13 @@ public class MainActivity extends Activity {
         cp.setMargins(0, dp(7), 0, dp(5));
         content.addView(card, cp);
 
-        card.addView(text("✦  ירושלים  ✦", 13, p[2], true),
-            new LinearLayout.LayoutParams(-1, -2));
+        cardTitleView = text("✦  ירושלים  ✦", 13, p[2], true);
+        card.addView(cardTitleView, new LinearLayout.LayoutParams(-1, -2));
         countView = text("0", 42, p[2], true);
         countView.setSingleLine(true);
         card.addView(countView, new LinearLayout.LayoutParams(-1, -2));
-        card.addView(text("ימים בלי בית מקדש", 13, p[3], true),
-            new LinearLayout.LayoutParams(-1, -2));
+        counterLabelView = text("ימים בלי בית מקדש", 13, p[3], true);
+        card.addView(counterLabelView, new LinearLayout.LayoutParams(-1, -2));
         dateView = text("", 1, p[3], false); // Date is intentionally hidden.
         dateView.setVisibility(View.GONE);
         card.addView(dateView, new LinearLayout.LayoutParams(0, 0));
@@ -206,27 +209,15 @@ public class MainActivity extends Activity {
             navigationButtons[i].setNextFocusDownId(navigationButtons[(i + 1) % navigationButtons.length].getId());
             navigationButtons[i].setNextFocusUpId(navigationButtons[(i + navigationButtons.length - 1) % navigationButtons.length].getId());
         }
-        TextView foot = text("חצים למעבר  •  אישור להפעלה  •  0 לרענון", 9, p[3], false);
+        footerView = text("חצים למעבר  •  אישור להפעלה  •  0 לרענון", 9, p[3], false);
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2);
         fp.setMargins(0, dp(3), 0, 0);
-        content.addView(foot, fp);
+        content.addView(footerView, fp);
 
         scroll.addView(content);
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(root);
-        mainScroll = scroll;
         updateQuote();
-
-        final int restoreY = pendingScrollY;
-        final int restoreFocus = pendingFocusIndex;
-        scroll.post(() -> {
-            View focusTarget = navigationButtonAt(restoreFocus);
-            if (focusTarget != null) focusTarget.requestFocus();
-            int contentHeight = scroll.getChildAt(0) == null
-                ? 0 : scroll.getChildAt(0).getHeight();
-            int maxScroll = Math.max(0, contentHeight - scroll.getHeight());
-            scroll.scrollTo(0, Math.min(restoreY, maxScroll));
-        });
     }
 
     private void refreshCounter() {
@@ -250,7 +241,7 @@ public class MainActivity extends Activity {
             "• ״החלפת עיצוב״ משנה את ערכת הצבעים של מסך האפליקציה.\n" +
             "• ״צבע הווידג׳ט״ שולט בצבע הרקע והכיתוב של הווידג׳טים במסך הבית. ״לפי צבע האפליקציה״ מצמיד את הצבעים שלהם לעיצוב האפליקציה, כך שהם מתחלפים יחד. בחירה בכחול, ירוק, לבן או שחור מעניקה לווידג׳טים צבע עצמאי, שאינו משתנה כשמחליפים את עיצוב האפליקציה.\n" +
             "• ״מועד עדכון המניין״ קובע מתי המונה עובר ליום הבא: בחצות הלילה לפי השעון המקומי של המכשיר, או בצאת הכוכבים בירושלים לפי אומדן אסטרונומי. בחירה במועד אחר מעדכנת מיד את המספר ואת הווידג׳טים. חישוב צאת הכוכבים הוא הערכה כללית, ולא תחליף ללוח הלכתי לפי מנהג מסוים. אפשר לרענן את המניין בכל עת גם באמצעות מקש 0.\n" +
-            "• ״עיגול פינות״ קובע את מידת העיגול של כרטיסי האפליקציה והווידג׳טים: ללא עיגול (0dp), עדין (8dp), רגיל (10dp — ברירת המחדל), בינוני (14dp) או מלא (22dp).\n" +
+            "• ״עיגול פינות״ משנה רק את פינות הרקע של הווידג׳טים. הכרטיסים והכפתורים באפליקציה נשארים בעיצוב הקבוע שלהם. אפשר לבחור ללא (0dp), עדין (8dp), רגיל (10dp — ברירת מחדל), בינוני (14dp) או מלא (22dp).\n" +
             "• כדי להוסיף ווידג׳ט, לחצו לחיצה ארוכה על מסך הבית, פתחו את רשימת הווידג׳טים ובחרו את הגודל הרצוי — קטן, בינוני או גדול."); 
 
         addAboutSection(page, "חורבן בית המקדש השני",
@@ -362,12 +353,33 @@ public class MainActivity extends Activity {
     }
 
     private void advanceTheme() {
-        pendingScrollY = mainScroll == null ? 0 : mainScroll.getScrollY();
-        pendingFocusIndex = focusedNavigationButtonIndex();
         theme = (theme + 1) % palettes.length;
         prefs.edit().putInt("theme", theme).apply();
-        buildUi();
+        applyThemeToViews();
         refreshCounter();
+    }
+
+    private void applyThemeToViews() {
+        int[] p = palettes[theme];
+        mainRoot.setBackgroundColor(p[0]);
+        appTitleView.setTextColor(p[2]);
+        appSubtitleView.setTextColor(p[3]);
+        counterCard.setBackground(shape(p[1], 14, p[2]));
+        cardTitleView.setTextColor(p[2]);
+        countView.setTextColor(p[2]);
+        counterLabelView.setTextColor(p[3]);
+        quoteView.setTextColor(p[3]);
+        sourceView.setTextColor(p[2]);
+        footerView.setTextColor(p[3]);
+
+        Button[] buttons = {quoteButton, themeButton, widgetThemeButton,
+            dayChangeButton, cornerRadiusButton, guideButton};
+        for (Button button : buttons) {
+            button.setTextColor(p[3]);
+            button.setBackground(shape(p[1], 10, button.hasFocus() ? p[3] : 0));
+            button.setOnFocusChangeListener((view, focused) ->
+                button.setBackground(shape(p[1], 10, focused ? p[3] : 0)));
+        }
     }
 
     private String widgetThemeLabel() {
@@ -401,23 +413,59 @@ public class MainActivity extends Activity {
     }
 
     private void showDayChangeDialog() {
-        final String[] options = {
-            "בחצות הלילה (ברירת מחדל)",
-            "בצאת הכוכבים בירושלים (חישוב משוער)"
-        };
         int selected = prefs.getBoolean("nightfall_mode", false) ? 1 : 0;
-        new AlertDialog.Builder(this)
-            .setTitle("בחירת מועד עדכון המניין")
-            .setMessage("בחירה במועד אחר מעדכנת מיד את המונה ואת הווידג׳טים. אפשר לרענן גם באופן יזום באמצעות מקש 0.")
-            .setSingleChoiceItems(options, selected, (dialog, which) -> {
-                prefs.edit().putBoolean("nightfall_mode", which == 1).apply();
+        LinearLayout choices = new LinearLayout(this);
+        choices.setOrientation(LinearLayout.VERTICAL);
+        choices.setPadding(dp(18), dp(8), dp(18), dp(8));
+        choices.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+        TextView explanation = text(
+            "בחרו מתי יתחיל יום חדש במניין. לאחר שמירת הבחירה, המספר והווידג׳טים יתעדכנו מיד.",
+            14, palettes[theme][3], false);
+        explanation.setGravity(Gravity.RIGHT);
+        choices.addView(explanation, new LinearLayout.LayoutParams(-1, -2));
+
+        RadioGroup group = new RadioGroup(this);
+        group.setOrientation(LinearLayout.VERTICAL);
+        group.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+        RadioButton midnight = new RadioButton(this);
+        midnight.setId(View.generateViewId());
+        midnight.setText("בחצות הלילה, לפי השעון המקומי — ברירת מחדל");
+        midnight.setTextSize(15);
+        group.addView(midnight, new RadioGroup.LayoutParams(-1, -2));
+
+        RadioButton nightfall = new RadioButton(this);
+        nightfall.setId(View.generateViewId());
+        nightfall.setText("בצאת הכוכבים בירושלים (הערכה אסטרונומית)");
+        nightfall.setTextSize(15);
+        group.addView(nightfall, new RadioGroup.LayoutParams(-1, -2));
+
+        group.check(selected == 1 ? nightfall.getId() : midnight.getId());
+        choices.addView(group, new LinearLayout.LayoutParams(-1, -2));
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle("מועד עדכון המניין")
+            .setView(choices)
+            .setPositiveButton("שמירה", null)
+            .setNegativeButton("ביטול", null)
+            .create();
+        dialog.setOnShowListener(ignored -> {
+            modalChoiceOpen = true;
+            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            saveButton.setOnClickListener(v -> {
+                int checked = group.getCheckedRadioButtonId();
+                if (checked == View.NO_ID) return;
+                boolean useNightfall = checked == nightfall.getId();
+                prefs.edit().putBoolean("nightfall_mode", useNightfall).apply();
                 dayChangeButton.setText(dayChangeLabel());
                 refreshCounter();
                 DayCounterWidget.scheduleNextUpdate(this);
                 dialog.dismiss();
-            })
-            .setNegativeButton("ביטול", null)
-            .show();
+            });
+        });
+        dialog.setOnDismissListener(ignored -> modalChoiceOpen = false);
+        dialog.show();
     }
 
     private String cornerRadiusLabel() {
@@ -448,41 +496,54 @@ public class MainActivity extends Activity {
             if (values[i] == current) selected = i;
         }
 
-        final int previousScroll = mainScroll == null ? 0 : mainScroll.getScrollY();
-        new AlertDialog.Builder(this)
-            .setTitle("בחירת מידת עיגול הפינות")
-            .setSingleChoiceItems(options, selected, (dialog, which) -> {
-                prefs.edit().putInt("corner_radius_dp", values[which]).apply();
-                pendingScrollY = previousScroll;
-                pendingFocusIndex = 4;
-                buildUi();
-                DayCounterWidget.updateAll(this);
-                dialog.dismiss();
-            })
+        LinearLayout choices = new LinearLayout(this);
+        choices.setOrientation(LinearLayout.VERTICAL);
+        choices.setPadding(dp(18), dp(8), dp(18), dp(8));
+        choices.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        TextView explanation = text(
+            "הבחירה משנה את פינות הרקע של הווידג׳טים בלבד. עיצוב האפליקציה נשאר קבוע.",
+            14, palettes[theme][3], false);
+        explanation.setGravity(Gravity.RIGHT);
+        choices.addView(explanation, new LinearLayout.LayoutParams(-1, -2));
+
+        RadioGroup group = new RadioGroup(this);
+        group.setOrientation(LinearLayout.VERTICAL);
+        group.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        RadioButton[] radios = new RadioButton[values.length];
+        for (int i = 0; i < values.length; i++) {
+            radios[i] = new RadioButton(this);
+            radios[i].setId(View.generateViewId());
+            radios[i].setText(options[i]);
+            radios[i].setTextSize(15);
+            group.addView(radios[i], new RadioGroup.LayoutParams(-1, -2));
+        }
+        group.check(radios[selected].getId());
+        choices.addView(group, new LinearLayout.LayoutParams(-1, -2));
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle("עיגול פינות בווידג׳ט")
+            .setView(choices)
+            .setPositiveButton("שמירה", null)
             .setNegativeButton("ביטול", null)
-            .show();
-    }
-
-    private View navigationButtonAt(int index) {
-        switch (index) {
-            case 0: return quoteButton;
-            case 1: return themeButton;
-            case 2: return widgetThemeButton;
-            case 3: return dayChangeButton;
-            case 4: return cornerRadiusButton;
-            case 5: return guideButton;
-            default: return quoteButton;
-        }
-    }
-
-    private int focusedNavigationButtonIndex() {
-        View[] buttons = {quoteButton, themeButton, widgetThemeButton,
-            dayChangeButton, cornerRadiusButton, guideButton};
-        View focused = getCurrentFocus();
-        for (int i = 0; i < buttons.length; i++) {
-            if (buttons[i] == focused) return i;
-        }
-        return 0;
+            .create();
+        dialog.setOnShowListener(ignored -> {
+            modalChoiceOpen = true;
+            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            saveButton.setOnClickListener(v -> {
+                int checked = group.getCheckedRadioButtonId();
+                for (int i = 0; i < radios.length; i++) {
+                    if (radios[i].getId() == checked) {
+                        prefs.edit().putInt("corner_radius_dp", values[i]).apply();
+                        cornerRadiusButton.setText(cornerRadiusLabel());
+                        DayCounterWidget.updateAll(this);
+                        dialog.dismiss();
+                        return;
+                    }
+                }
+            });
+        });
+        dialog.setOnDismissListener(ignored -> modalChoiceOpen = false);
+        dialog.show();
     }
 
     private void moveButtonFocus(boolean down) {
@@ -501,6 +562,7 @@ public class MainActivity extends Activity {
     }
 
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (modalChoiceOpen) return super.onKeyDown(keyCode, event);
         // The only numeric shortcut is 0 for an explicit counter refresh.
         if (keyCode == KeyEvent.KEYCODE_0) {
             refreshCounter();
