@@ -253,7 +253,7 @@ public class MainActivity extends Activity {
             "שם האפליקציה לקוח מן הקינה ״אש תוקד בקרבי״ הנאמרת בתשעה באב. הקינה מעמידה זו מול זו את היציאה ממצרים, שהייתה מעבר מעבדות לחירות, ואת היציאה מירושלים שבאה בעקבות החורבן והגלות. השם מבטא את הכאב על אובדן ירושלים ואת התקווה לשובה ולבניין בית המקדש.");
 
         addAboutSection(page, "אודות",
-            "בצאתי מירושלים — גרסה 1.2\n" +
+            "בצאתי מירושלים — גרסה 2.1\n" +
             "פותחה על ידי שמואל_770 מפורום מתמחים טופ.");
 
         ScrollView scroller = new ScrollView(this);
@@ -395,68 +395,159 @@ public class MainActivity extends Activity {
             : "מועד עדכון המניין: בחצות הלילה";
     }
 
-    private void showWidgetThemeDialog() {
-        final String[] options = {
-            "לפי צבע האפליקציה", "כחול", "ירוק", "לבן", "שחור"
-        };
-        int selected = prefs.getInt("widget_theme", -1) + 1;
-        new AlertDialog.Builder(this)
-            .setTitle("בחירת צבע לווידג׳ט")
-            .setSingleChoiceItems(options, selected, (dialog, which) -> {
-                prefs.edit().putInt("widget_theme", which - 1).apply();
-                widgetThemeButton.setText(widgetThemeLabel());
-                DayCounterWidget.updateAll(this);
-                dialog.dismiss();
-            })
-            .setNegativeButton("ביטול", null)
-            .show();
+
+    private LinearLayout createChoicePanel(String explanationText) {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(16), dp(10), dp(16), dp(10));
+        panel.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+        TextView explanation = text(explanationText, 14, palettes[theme][3], false);
+        explanation.setGravity(Gravity.RIGHT);
+        explanation.setTextDirection(View.TEXT_DIRECTION_RTL);
+        explanation.setLineSpacing(dp(3), 1.0f);
+        explanation.setPadding(dp(4), dp(2), dp(4), dp(10));
+        panel.addView(explanation, new LinearLayout.LayoutParams(-1, -2));
+        return panel;
     }
 
-    private void showDayChangeDialog() {
-        int selected = prefs.getBoolean("nightfall_mode", false) ? 1 : 0;
-        LinearLayout choices = new LinearLayout(this);
-        choices.setOrientation(LinearLayout.VERTICAL);
-        choices.setPadding(dp(18), dp(8), dp(18), dp(8));
-        choices.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+    private void addChoiceOption(LinearLayout panel, final int index,
+            String title, String detail, final int[] selected,
+            final LinearLayout[] rows, final TextView[] markers) {
+        int[] p = palettes[theme];
+        TextView marker = text("○", 23, p[3], true);
+        marker.setGravity(Gravity.CENTER);
+        marker.setPadding(0, 0, 0, 0);
+        markers[index] = marker;
 
-        TextView explanation = text(
-            "בחרו מתי יתחיל יום חדש במניין. לאחר שמירת הבחירה, המספר והווידג׳טים יתעדכנו מיד.",
-            14, palettes[theme][3], false);
-        explanation.setGravity(Gravity.RIGHT);
-        choices.addView(explanation, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        row.setPadding(dp(10), dp(7), dp(10), dp(7));
+        row.setMinimumHeight(dp(66));
+        row.setFocusable(true);
+        row.setClickable(true);
+        row.setContentDescription(title + ". " + detail);
 
-        RadioGroup group = new RadioGroup(this);
-        group.setOrientation(LinearLayout.VERTICAL);
-        group.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        LinearLayout textColumn = new LinearLayout(this);
+        textColumn.setOrientation(LinearLayout.VERTICAL);
+        textColumn.setGravity(Gravity.CENTER_VERTICAL);
+        textColumn.setPadding(dp(4), 0, dp(4), 0);
 
-        RadioButton midnight = new RadioButton(this);
-        midnight.setId(View.generateViewId());
-        midnight.setText("בחצות הלילה, לפי השעון המקומי — ברירת מחדל");
-        midnight.setTextSize(15);
-        group.addView(midnight, new RadioGroup.LayoutParams(-1, -2));
+        TextView titleView = text(title, 15, p[3], true);
+        titleView.setGravity(Gravity.RIGHT);
+        titleView.setTextDirection(View.TEXT_DIRECTION_RTL);
+        TextView detailView = text(detail, 12, p[2], false);
+        detailView.setGravity(Gravity.RIGHT);
+        detailView.setTextDirection(View.TEXT_DIRECTION_RTL);
+        detailView.setLineSpacing(dp(2), 1.0f);
+        textColumn.addView(titleView, new LinearLayout.LayoutParams(-1, -2));
+        textColumn.addView(detailView, new LinearLayout.LayoutParams(-1, -2));
 
-        RadioButton nightfall = new RadioButton(this);
-        nightfall.setId(View.generateViewId());
-        nightfall.setText("בצאת הכוכבים בירושלים (הערכה אסטרונומית)");
-        nightfall.setTextSize(15);
-        group.addView(nightfall, new RadioGroup.LayoutParams(-1, -2));
+        row.addView(marker, new LinearLayout.LayoutParams(dp(34), -2));
+        row.addView(textColumn, new LinearLayout.LayoutParams(0, -2, 1));
+        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(-1, -2);
+        rowParams.setMargins(0, dp(4), 0, dp(4));
+        panel.addView(row, rowParams);
+        rows[index] = row;
 
-        group.check(selected == 1 ? nightfall.getId() : midnight.getId());
-        choices.addView(group, new LinearLayout.LayoutParams(-1, -2));
+        row.setOnClickListener(v -> {
+            selected[0] = index;
+            updateChoiceOptions(rows, markers, selected[0]);
+        });
+    }
 
+    private void updateChoiceOptions(LinearLayout[] rows, TextView[] markers, int selected) {
+        int[] p = palettes[theme];
+        for (int i = 0; i < rows.length; i++) {
+            boolean checked = i == selected;
+            markers[i].setText(checked ? "●" : "○");
+            markers[i].setTextColor(checked ? p[2] : p[3]);
+            rows[i].setBackground(shape(checked ? p[1] : p[0], 12,
+                checked ? p[2] : 0x55777777));
+        }
+    }
+
+    private void showWidgetThemeDialog() {
+        final int[] values = {-1, 0, 1, 2, 3};
+        final String[] titles = {
+            "לפי צבע האפליקציה", "כחול", "ירוק", "לבן", "שחור"
+        };
+        final String[] details = {
+            "הווידג׳טים יחליפו צבע יחד עם עיצוב האפליקציה.",
+            "רקע כחול כהה עם כיתוב בהיר.",
+            "רקע ירוק עמוק עם כיתוב בהיר.",
+            "רקע בהיר ונקי עם כיתוב כהה.",
+            "רקע שחור עם כיתוב בהיר."
+        };
+        int current = prefs.getInt("widget_theme", -1);
+        int initial = 0;
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] == current) initial = i;
+        }
+
+        final int[] selected = {initial};
+        LinearLayout panel = createChoicePanel(
+            "בחרו את צבע הרקע של הווידג׳טים. אפשר להצמיד אותם לעיצוב האפליקציה או לבחור צבע עצמאי.");
+        LinearLayout[] rows = new LinearLayout[values.length];
+        TextView[] markers = new TextView[values.length];
+        for (int i = 0; i < values.length; i++) {
+            addChoiceOption(panel, i, titles[i], details[i], selected, rows, markers);
+        }
+        updateChoiceOptions(rows, markers, selected[0]);
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(panel);
         AlertDialog dialog = new AlertDialog.Builder(this)
-            .setTitle("מועד עדכון המניין")
-            .setView(choices)
+            .setTitle("בחירת צבע לווידג׳ט")
+            .setView(scroll)
             .setPositiveButton("שמירה", null)
             .setNegativeButton("ביטול", null)
             .create();
         dialog.setOnShowListener(ignored -> {
             modalChoiceOpen = true;
-            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            saveButton.setOnClickListener(v -> {
-                int checked = group.getCheckedRadioButtonId();
-                if (checked == View.NO_ID) return;
-                boolean useNightfall = checked == nightfall.getId();
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                prefs.edit().putInt("widget_theme", values[selected[0]]).apply();
+                widgetThemeButton.setText(widgetThemeLabel());
+                DayCounterWidget.updateAll(this);
+                dialog.dismiss();
+            });
+        });
+        dialog.setOnDismissListener(ignored -> modalChoiceOpen = false);
+        dialog.show();
+    }
+
+    private void showDayChangeDialog() {
+        final String[] titles = {
+            "בחצות הלילה", "בצאת הכוכבים בירושלים"
+        };
+        final String[] details = {
+            "היום החדש מתחיל בשעה 00:00 לפי השעון המקומי של המכשיר.",
+            "עדכון לפי אומדן אסטרונומי בירושלים; אינו תחליף ללוח הלכתי."
+        };
+        final int[] selected = {prefs.getBoolean("nightfall_mode", false) ? 1 : 0};
+
+        LinearLayout panel = createChoicePanel(
+            "בחרו מתי יתחיל יום חדש במניין. לאחר שמירת הבחירה, המספר והווידג׳טים יתעדכנו מיד.");
+        LinearLayout[] rows = new LinearLayout[titles.length];
+        TextView[] markers = new TextView[titles.length];
+        for (int i = 0; i < titles.length; i++) {
+            addChoiceOption(panel, i, titles[i], details[i], selected, rows, markers);
+        }
+        updateChoiceOptions(rows, markers, selected[0]);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle("מועד עדכון המניין")
+            .setView(panel)
+            .setPositiveButton("שמירה", null)
+            .setNegativeButton("ביטול", null)
+            .create();
+        dialog.setOnShowListener(ignored -> {
+            modalChoiceOpen = true;
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                boolean useNightfall = selected[0] == 1;
                 prefs.edit().putBoolean("nightfall_mode", useNightfall).apply();
                 dayChangeButton.setText(dayChangeLabel());
                 refreshCounter();
@@ -483,63 +574,48 @@ public class MainActivity extends Activity {
 
     private void showCornerRadiusDialog() {
         final int[] values = {0, 8, 10, 14, 22};
-        final String[] options = {
-            "ללא (0dp)",
-            "עדין (8dp)",
-            "רגיל — ברירת מחדל (10dp)",
-            "בינוני (14dp)",
-            "מלא (22dp)"
+        final String[] titles = {
+            "ללא", "עדין", "רגיל — ברירת מחדל", "בינוני", "מלא"
+        };
+        final String[] details = {
+            "פינות ישרות לחלוטין (0dp).",
+            "עיגול קל ועדין (8dp).",
+            "עיגול מאוזן ונעים לעין (10dp).",
+            "עיגול מודגש יותר (14dp).",
+            "עיגול רחב ורך (22dp)."
         };
         int current = prefs.getInt("corner_radius_dp", 10);
-        int selected = 2;
+        int initial = 2;
         for (int i = 0; i < values.length; i++) {
-            if (values[i] == current) selected = i;
+            if (values[i] == current) initial = i;
         }
 
-        LinearLayout choices = new LinearLayout(this);
-        choices.setOrientation(LinearLayout.VERTICAL);
-        choices.setPadding(dp(18), dp(8), dp(18), dp(8));
-        choices.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        TextView explanation = text(
-            "הבחירה משנה את פינות הרקע של הווידג׳טים בלבד. עיצוב האפליקציה נשאר קבוע.",
-            14, palettes[theme][3], false);
-        explanation.setGravity(Gravity.RIGHT);
-        choices.addView(explanation, new LinearLayout.LayoutParams(-1, -2));
-
-        RadioGroup group = new RadioGroup(this);
-        group.setOrientation(LinearLayout.VERTICAL);
-        group.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        RadioButton[] radios = new RadioButton[values.length];
+        final int[] selected = {initial};
+        LinearLayout panel = createChoicePanel(
+            "בחרו את מידת העיגול של פינות הווידג׳טים בלבד. הכרטיסים והכפתורים באפליקציה יישארו בעיצוב הקבוע.");
+        LinearLayout[] rows = new LinearLayout[values.length];
+        TextView[] markers = new TextView[values.length];
         for (int i = 0; i < values.length; i++) {
-            radios[i] = new RadioButton(this);
-            radios[i].setId(View.generateViewId());
-            radios[i].setText(options[i]);
-            radios[i].setTextSize(15);
-            group.addView(radios[i], new RadioGroup.LayoutParams(-1, -2));
+            addChoiceOption(panel, i, titles[i], details[i], selected, rows, markers);
         }
-        group.check(radios[selected].getId());
-        choices.addView(group, new LinearLayout.LayoutParams(-1, -2));
+        updateChoiceOptions(rows, markers, selected[0]);
 
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(panel);
         AlertDialog dialog = new AlertDialog.Builder(this)
             .setTitle("עיגול פינות בווידג׳ט")
-            .setView(choices)
+            .setView(scroll)
             .setPositiveButton("שמירה", null)
             .setNegativeButton("ביטול", null)
             .create();
         dialog.setOnShowListener(ignored -> {
             modalChoiceOpen = true;
-            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            saveButton.setOnClickListener(v -> {
-                int checked = group.getCheckedRadioButtonId();
-                for (int i = 0; i < radios.length; i++) {
-                    if (radios[i].getId() == checked) {
-                        prefs.edit().putInt("corner_radius_dp", values[i]).apply();
-                        cornerRadiusButton.setText(cornerRadiusLabel());
-                        DayCounterWidget.updateAll(this);
-                        dialog.dismiss();
-                        return;
-                    }
-                }
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                prefs.edit().putInt("corner_radius_dp", values[selected[0]]).apply();
+                cornerRadiusButton.setText(cornerRadiusLabel());
+                DayCounterWidget.updateAll(this);
+                dialog.dismiss();
             });
         });
         dialog.setOnDismissListener(ignored -> modalChoiceOpen = false);
