@@ -135,6 +135,49 @@ public class DayCounterWidget extends AppWidgetProvider {
         }
     }
 
+    private static int chooseWidgetBackground(int theme, int radiusDp) {
+        int radius = radiusDp;
+        if (radius != 0 && radius != 8 && radius != 10 && radius != 14 && radius != 22) {
+            radius = 10;
+        }
+        if (theme < 0 || theme > 3) theme = 0;
+
+        if (theme == 1) {
+            switch (radius) {
+                case 0: return R.drawable.widget_background_green_radius_0;
+                case 8: return R.drawable.widget_background_green_radius_8;
+                case 14: return R.drawable.widget_background_green_radius_14;
+                case 22: return R.drawable.widget_background_green_radius_22;
+                default: return R.drawable.widget_background_green_radius_10;
+            }
+        }
+        if (theme == 2) {
+            switch (radius) {
+                case 0: return R.drawable.widget_background_light_radius_0;
+                case 8: return R.drawable.widget_background_light_radius_8;
+                case 14: return R.drawable.widget_background_light_radius_14;
+                case 22: return R.drawable.widget_background_light_radius_22;
+                default: return R.drawable.widget_background_light_radius_10;
+            }
+        }
+        if (theme == 3) {
+            switch (radius) {
+                case 0: return R.drawable.widget_background_dark_radius_0;
+                case 8: return R.drawable.widget_background_dark_radius_8;
+                case 14: return R.drawable.widget_background_dark_radius_14;
+                case 22: return R.drawable.widget_background_dark_radius_22;
+                default: return R.drawable.widget_background_dark_radius_10;
+            }
+        }
+        switch (radius) {
+            case 0: return R.drawable.widget_background_radius_0;
+            case 8: return R.drawable.widget_background_radius_8;
+            case 14: return R.drawable.widget_background_radius_14;
+            case 22: return R.drawable.widget_background_radius_22;
+            default: return R.drawable.widget_background_radius_10;
+        }
+    }
+
     private static void updateIds(Context context, AppWidgetManager manager, int[] ids,
                                   int sizeClass) {
         if (ids == null || ids.length == 0) return;
@@ -160,6 +203,8 @@ public class DayCounterWidget extends AppWidgetProvider {
             String.format(Locale.getDefault(), "%,d", days));
         views.setTextViewText(R.id.widget_label, "ימים בלי בית מקדש");
         views.setTextViewText(R.id.widget_quote, VERSES[quoteIndex]);
+        views.setInt(R.id.widget_root, "setBackgroundResource",
+            chooseWidgetBackground(widgetTheme, prefs.getInt("corner_radius_dp", 10)));
         views.setOnClickPendingIntent(R.id.widget_root, pending);
 
         for (int id : ids) manager.updateAppWidget(id, views);

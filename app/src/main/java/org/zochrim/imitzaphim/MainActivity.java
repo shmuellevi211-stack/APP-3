@@ -22,8 +22,12 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private SharedPreferences prefs;
     private TextView countView, dateView, quoteView, sourceView;
-    private Button quoteButton, themeButton, widgetThemeButton, dayChangeButton, guideButton;
+    private Button quoteButton, themeButton, widgetThemeButton, dayChangeButton;
+    private Button cornerRadiusButton, guideButton;
+    private ScrollView mainScroll;
     private int theme = 0, quoteIndex = 0;
+    private int pendingScrollY = 0;
+    private int pendingFocusIndex = 0;
     private final Handler counterHandler = new Handler(Looper.getMainLooper());
     private final Runnable counterRefresh = new Runnable() {
         @Override public void run() {
@@ -84,7 +88,8 @@ public class MainActivity extends Activity {
     private GradientDrawable shape(int color, int radius, int strokeColor) {
         GradientDrawable d = new GradientDrawable();
         d.setColor(color);
-        d.setCornerRadius(dp(radius));
+        int selectedRadius = prefs == null ? radius : prefs.getInt("corner_radius_dp", 10);
+        d.setCornerRadius(dp(selectedRadius));
         if (strokeColor != 0) d.setStroke(dp(2), strokeColor);
         return d;
     }
@@ -185,12 +190,18 @@ public class MainActivity extends Activity {
         content.addView(dayChangeButton, new LinearLayout.LayoutParams(-1, -2));
         dayChangeButton.setOnClickListener(v -> showDayChangeDialog());
 
+        cornerRadiusButton = button(cornerRadiusLabel(), p[1], p[3]);
+        cornerRadiusButton.setId(View.generateViewId());
+        content.addView(cornerRadiusButton, new LinearLayout.LayoutParams(-1, -2));
+        cornerRadiusButton.setOnClickListener(v -> showCornerRadiusDialog());
+
         guideButton = button("מדריך הפעלה", p[1], p[3]);
         guideButton.setId(View.generateViewId());
         content.addView(guideButton, new LinearLayout.LayoutParams(-1, -2));
         guideButton.setOnClickListener(v -> showGuideAndAbout());
 
-        View[] navigationButtons = {quoteButton, themeButton, widgetThemeButton, dayChangeButton, guideButton};
+        View[] navigationButtons = {quoteButton, themeButton, widgetThemeButton,
+            dayChangeButton, cornerRadiusButton, guideButton};
         for (int i = 0; i < navigationButtons.length; i++) {
             navigationButtons[i].setNextFocusDownId(navigationButtons[(i + 1) % navigationButtons.length].getId());
             navigationButtons[i].setNextFocusUpId(navigationButtons[(i + navigationButtons.length - 1) % navigationButtons.length].getId());
@@ -203,8 +214,19 @@ public class MainActivity extends Activity {
         scroll.addView(content);
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(root);
+        mainScroll = scroll;
         updateQuote();
-        quoteButton.requestFocus();
+
+        final int restoreY = pendingScrollY;
+        final int restoreFocus = pendingFocusIndex;
+        scroll.post(() -> {
+            View focusTarget = navigationButtonAt(restoreFocus);
+            if (focusTarget != null) focusTarget.requestFocus();
+            int contentHeight = scroll.getChildAt(0) == null
+                ? 0 : scroll.getChildAt(0).getHeight();
+            int maxScroll = Math.max(0, contentHeight - scroll.getHeight());
+            scroll.scrollTo(0, Math.min(restoreY, maxScroll));
+        });
     }
 
     private void refreshCounter() {
@@ -223,26 +245,24 @@ public class MainActivity extends Activity {
         page.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
 
         addAboutSection(page, "מדריך הפעלה",
-            "• המספר הראשי מציג כמה ימים חלפו מתאריך הייחוס 5 באוגוסט 70 לספירה.\n" +
-            "• ״משפט אחר מהמקורות״ מחליף את הפסוק המוצג בווידג׳ט.\n" +
-            "• ״החלפת עיצוב״ משנה את צבעי מסך האפליקציה בלבד.\n" +
-            "• ״צבע הווידג׳ט״ קובע את צבע הרקע והכיתוב של הווידג׳טים שמופיעים במסך הבית. בחירה ב״לפי צבע האפליקציה״ גורמת לווידג׳טים להשתמש באותה ערכת צבעים של האפליקציה, כך שהם משתנים יחד כשמחליפים עיצוב. בחירה בצבע מסוים (כחול, ירוק, לבן או שחור) מנתקת ביניהם: אפשר למשל להשאיר את האפליקציה כהה ואת הווידג׳טים בהירים. ההגדרה הזאת משנה רק את הווידג׳טים, ולא את מראה האפליקציה.\n" +
-            "• ״מועד עדכון המניין״ קובע באיזו שעה נחשב שהתחיל יום חדש לצורך המספר. ״בחצות הלילה״ (ברירת המחדל) המניין מתקדם אחרי חצות לפי השעון המקומי של המכשיר. ״בצאת הכוכבים בירושלים״ המניין מתקדם בערב, בזמן משוער שבו השמש נמצאת כ־8.5 מעלות מתחת לאופק בירושלים. זו הערכה אסטרונומית כללית ולא לוח זמנים הלכתי מדויק, ולכן היא עשויה להיות שונה מלוחות וממנהגים שונים.\n" +
-            "• הבחירה במועד העדכון משנה את זמן המעבר של המספר ליום הבא; היא אינה משנה את מספר הימים שכבר נספרו.\n" +
-            "• מקשי 2/8 מעבירים מיקוד, 4 מחליף פסוק, 6 מחליף את עיצוב האפליקציה, 5/אישור מפעיל כפתור ו־0 מרענן את המניין.\n" +
-            "• להוספת ווידג׳ט: לחיצה ארוכה במסך הבית ופתיחת ״ווידג׳טים״. בחר ווידג׳ט קטן, בינוני או גדול והוסף למסך הבית.");
+            "• המונה מציג כמה ימים עברו מתאריך הייחוס הקבוע של האפליקציה.\\n" +
+            "• ״משפט אחר מהמקורות״ מחליף את הפסוק שמופיע במסך ובווידג׳ט.\\n" +
+            "• ״החלפת עיצוב״ משנה את ערכת הצבעים של מסך האפליקציה.\\n" +
+            "• ״צבע הווידג׳ט״ שולט בצבע הרקע והכיתוב של הווידג׳טים במסך הבית. ״לפי צבע האפליקציה״ מצמיד את הצבעים שלהם לעיצוב האפליקציה, כך שהם מתחלפים יחד. בחירה בכחול, ירוק, לבן או שחור מעניקה לווידג׳טים צבע עצמאי, שאינו משתנה כשמחליפים את עיצוב האפליקציה.\\n" +
+            "• ״מועד עדכון המניין״ קובע מתי המונה עובר ליום הבא: בחצות הלילה לפי השעון המקומי של המכשיר, או בצאת הכוכבים בירושלים לפי אומדן אסטרונומי. בחירה במועד אחר מעדכנת מיד את המספר ואת הווידג׳טים. חישוב צאת הכוכבים הוא הערכה כללית, ולא תחליף ללוח הלכתי לפי מנהג מסוים. אפשר לרענן את המניין בכל עת גם באמצעות מקש 0.\\n" +
+            "• ״עיגול פינות״ קובע את מידת העיגול של כרטיסי האפליקציה והווידג׳טים: ללא עיגול (0dp), עדין (8dp), רגיל (10dp — ברירת המחדל), בינוני (14dp) או מלא (22dp).\\n" +
+            "• כדי להוסיף ווידג׳ט, לחצו לחיצה ארוכה על מסך הבית, פתחו את רשימת הווידג׳טים ובחרו את הגודל הרצוי — קטן, בינוני או גדול."); 
 
         addAboutSection(page, "חורבן בית המקדש השני",
-            "לפי המסורת, בית המקדש השני חרב בט׳ באב בשנת ג׳תת״ל (3830 לבריאת העולם), בשנת 70 לספירה.\n" +
-            "בהמרה חשבונית לאחור, התאריך הלועזי המקביל מוערך בקירוב כ־2 באוגוסט 70, אך תאריכים אזרחיים מתקופה זו אינם ודאיים.\n" +
-            "לצורך מניין הימים, האפליקציה משתמשת בתאריך ייחוס קבוע: 5 באוגוסט 70 לספירה.\n" +
-            "לפי המסורת, בית המקדש השני עמד על תילו 420 שנה. נכון לשנת 2026 חלפו בקירוב 1,956 שנים מאז החורבן.");
+            "על פי המסורת, חורבן הבית השני מצוין בתשעה באב (ט׳ באב). אחת הכרונולוגיות המקובלות משייכת את החורבן לשנת ג׳תת״ל (3830 לבריאת העולם), בסביבות שנת 70 לספירה. מאחר שמדובר בתקופה קדומה, יש הבדלים בין שיטות התיארוך וההמרה ללוח האזרחי.\\n" +
+            "לצורך חישוב עקבי של המניין, האפליקציה משתמשת בתאריך ייחוס קבוע — 5 באוגוסט 70 לספירה. זהו תאריך הבסיס של החישוב באפליקציה.\\n" +
+            "על פי המסורת, בית המקדש השני עמד על תילו 420 שנה. נכון לשנת ה׳תשפ״ז (5787, החלה בשנת 2026 ונמשכת לתוך 2027), חלפו בקירוב 1,956 שנים מאז חורבן הבית. זהו מספר מקורב, ולא תיארוך היסטורי מדויק."); 
 
         addAboutSection(page, "משמעות השם",
             "השם ״בצאתי מירושלים״ לקוח מן הקינה ״אש תוקד בקרבי״ הנאמרת בתשעה באב. הקינה משווה בין יציאת מצרים, שהייתה יציאה לחירות, לבין היציאה מירושלים שבאה בעקבות החורבן והגלות. כך היא מבטאת את עומק האבל והגעגוע לירושלים ולבית המקדש, ואת התקווה לשוב ולבנותם.");
 
         addAboutSection(page, "אודות",
-            "בצאתי מירושלים — גרסה 1.1\n" +
+            "בצאתי מירושלים — גרסה 1.2\n" +
             "פותחה על ידי שמואל_770 מפורום מתמחים טופ.");
 
         ScrollView scroller = new ScrollView(this);
@@ -342,11 +362,12 @@ public class MainActivity extends Activity {
     }
 
     private void advanceTheme() {
+        pendingScrollY = mainScroll == null ? 0 : mainScroll.getScrollY();
+        pendingFocusIndex = focusedNavigationButtonIndex();
         theme = (theme + 1) % palettes.length;
         prefs.edit().putInt("theme", theme).apply();
         buildUi();
         refreshCounter();
-        if (themeButton != null) themeButton.requestFocus();
     }
 
     private String widgetThemeLabel() {
@@ -387,6 +408,7 @@ public class MainActivity extends Activity {
         int selected = prefs.getBoolean("nightfall_mode", false) ? 1 : 0;
         new AlertDialog.Builder(this)
             .setTitle("בחירת מועד עדכון המניין")
+            .setMessage("בחירה במועד אחר מעדכנת מיד את המונה ואת הווידג׳טים. אפשר לרענן גם באופן יזום באמצעות מקש 0.")
             .setSingleChoiceItems(options, selected, (dialog, which) -> {
                 prefs.edit().putBoolean("nightfall_mode", which == 1).apply();
                 dayChangeButton.setText(dayChangeLabel());
@@ -398,8 +420,74 @@ public class MainActivity extends Activity {
             .show();
     }
 
+    private String cornerRadiusLabel() {
+        int radius = prefs.getInt("corner_radius_dp", 10);
+        String name;
+        switch (radius) {
+            case 0: name = "ללא"; break;
+            case 8: name = "עדין"; break;
+            case 14: name = "בינוני"; break;
+            case 22: name = "מלא"; break;
+            default: name = "רגיל"; radius = 10; break;
+        }
+        return "עיגול פינות: " + name + " (" + radius + "dp)";
+    }
+
+    private void showCornerRadiusDialog() {
+        final int[] values = {0, 8, 10, 14, 22};
+        final String[] options = {
+            "ללא (0dp)",
+            "עדין (8dp)",
+            "רגיל — ברירת מחדל (10dp)",
+            "בינוני (14dp)",
+            "מלא (22dp)"
+        };
+        int current = prefs.getInt("corner_radius_dp", 10);
+        int selected = 2;
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] == current) selected = i;
+        }
+
+        final int previousScroll = mainScroll == null ? 0 : mainScroll.getScrollY();
+        new AlertDialog.Builder(this)
+            .setTitle("בחירת מידת עיגול הפינות")
+            .setSingleChoiceItems(options, selected, (dialog, which) -> {
+                prefs.edit().putInt("corner_radius_dp", values[which]).apply();
+                pendingScrollY = previousScroll;
+                pendingFocusIndex = 4;
+                buildUi();
+                DayCounterWidget.updateAll(this);
+                dialog.dismiss();
+            })
+            .setNegativeButton("ביטול", null)
+            .show();
+    }
+
+    private View navigationButtonAt(int index) {
+        switch (index) {
+            case 0: return quoteButton;
+            case 1: return themeButton;
+            case 2: return widgetThemeButton;
+            case 3: return dayChangeButton;
+            case 4: return cornerRadiusButton;
+            case 5: return guideButton;
+            default: return quoteButton;
+        }
+    }
+
+    private int focusedNavigationButtonIndex() {
+        View[] buttons = {quoteButton, themeButton, widgetThemeButton,
+            dayChangeButton, cornerRadiusButton, guideButton};
+        View focused = getCurrentFocus();
+        for (int i = 0; i < buttons.length; i++) {
+            if (buttons[i] == focused) return i;
+        }
+        return 0;
+    }
+
     private void moveButtonFocus(boolean down) {
-        View[] buttons = {quoteButton, themeButton, widgetThemeButton, dayChangeButton, guideButton};
+        View[] buttons = {quoteButton, themeButton, widgetThemeButton,
+            dayChangeButton, cornerRadiusButton, guideButton};
         int currentIndex = 0;
         View current = getCurrentFocus();
         for (int i = 0; i < buttons.length; i++) {
@@ -413,7 +501,13 @@ public class MainActivity extends Activity {
     }
 
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Navigation is intentionally limited to the directional pad and its confirm key.
+        // The only numeric shortcut is 0 for an explicit counter refresh.
+        if (keyCode == KeyEvent.KEYCODE_0) {
+            refreshCounter();
+            DayCounterWidget.scheduleNextUpdate(this);
+            return true;
+        }
+        // All navigation otherwise uses the directional pad and its confirm key.
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
             moveButtonFocus(false);
             return true;
