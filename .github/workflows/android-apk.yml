@@ -4,6 +4,9 @@ on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
+  # Keep the small signing-key cache alive so each APK uses the same update certificate.
+  schedule:
+    - cron: '17 2 * * 1'
 
 permissions:
   contents: read
@@ -23,6 +26,12 @@ jobs:
 
       - name: Verify Java
         run: java -version
+
+      - name: Restore stable Android debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: android-debug-signing-key-v1
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
